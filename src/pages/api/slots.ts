@@ -8,7 +8,6 @@ export const GET: APIRoute = async () => {
   const [{ schedule }, bookings] = await Promise.all([getContent(), getBookings(kyivNow().date)]);
   const days = buildDays(schedule, bookings)
     .filter((d) => d.slots.some((s) => s.state === 'free'))
-    .slice(0, 7)
     .map((d) => ({
       date: d.date,
       ...dayLabel(d.date),
