@@ -2,7 +2,7 @@
 
 Astro + Cloudflare Workers + Supabase. Дизайн, тексти й поведінка взяті з макета `stotesel.html`.
 
-- Сайт: https://stotesel.stotesel.workers.dev
+- Сайт: https://stotesel.com.ua (www перенаправляється на основну адресу)
 - Адмінка: `/admin`
 - Репозиторій: https://github.com/stotesel/0
 - Автодеплой: кожен push у `main` збирає сайт і публікує його на Cloudflare (GitHub Actions)

@@ -1,8 +1,16 @@
 {
   "name": "stotesel",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"]
-  // Секрети (ADMIN_PASSWORD, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, за потреби Telegram і Turnstile)
+  "compatibility_flags": ["nodejs_compat"],
+  // Сайт доступний лише на власному домені: дублікат на workers.dev шкодив би пошуку.
+  "workers_dev": false,
+  "preview_urls": false,
+  // Власний домен: Cloudflare сам створює DNS-записи й сертифікат HTTPS.
+  "routes": [
+    { "pattern": "stotesel.com.ua", "custom_domain": true },
+    { "pattern": "www.stotesel.com.ua", "custom_domain": true }
+  ]
+  // Секрети (ADMIN_PASSWORD, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, Telegram, Turnstile)
   // задаються командою `npx wrangler secret put НАЗВА`, у файл вони не пишуться.
   // Без Supabase сайт працює в демо-режимі з пам'яттю процесу; для нього KV не потрібен.
 }
