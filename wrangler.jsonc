@@ -1,8 +1,8 @@
 {
   "name": "stotesel",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"],
-  // Локальне сховище демо-режиму. Коли задані SUPABASE_URL і
-  // SUPABASE_SERVICE_ROLE_KEY, сайт працює з Supabase і цей KV не використовується.
-  "kv_namespaces": [{ "binding": "DEMO_KV" }]
+  "compatibility_flags": ["nodejs_compat"]
+  // Секрети (ADMIN_PASSWORD, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, за потреби Telegram і Turnstile)
+  // задаються командою `npx wrangler secret put НАЗВА`, у файл вони не пишуться.
+  // Без Supabase сайт працює в демо-режимі з пам'яттю процесу; для нього KV не потрібен.
 }
