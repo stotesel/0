@@ -14,11 +14,14 @@ export const addressLine = (s: Settings) => `${s.street}, ${s.city}`;
 export const price = (n: number) => n.toLocaleString('uk-UA').replace(/ /g, ' ');
 
 export function mapLinks(s: Settings) {
-  const q = encodeURIComponent(addressLine(s));
+  // Якщо в налаштуваннях задані координати, мітка й маршрути ведуть точно на них,
+  // а не на місце, яке Google підбирає за адресою.
+  const hasCoords = /^-?\d+(\.\d+)?$/.test(s.lat.trim()) && /^-?\d+(\.\d+)?$/.test(s.lng.trim());
+  const q = encodeURIComponent(hasCoords ? `${s.lat.trim()},${s.lng.trim()}` : addressLine(s));
   return {
-    embed: `https://maps.google.com/maps?q=${q}&z=15&output=embed`,
+    embed: `https://maps.google.com/maps?q=${q}&z=${hasCoords ? 17 : 15}&output=embed`,
     google: `https://www.google.com/maps/dir/?api=1&destination=${q}`,
-    waze: `https://waze.com/ul?q=${q}&navigate=yes`,
+    waze: hasCoords ? `https://waze.com/ul?ll=${q}&navigate=yes` : `https://waze.com/ul?q=${q}&navigate=yes`,
   };
 }
 
