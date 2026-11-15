@@ -181,6 +181,13 @@ const BLOCK_NAMES: Record<string, string> = {
   hero: 'Перший екран', brands: 'Стрічка марок', services: 'Послуги і ціни', process: 'Як проходить візит', why: 'Чому ми',
   booking: 'Запис', faq: 'Часті питання', contacts: 'Контакти і карта', reviews: 'Відгуки', text: 'Текстовий блок', banner: 'Банер',
 };
+// Легкий фон картки заявки за статусом: нова лишається білою
+const STATUS_TINT: Record<Booking['status'], string> = {
+  new: '',
+  confirmed: '!bg-sky-50 ring-1 ring-sky-200',
+  done: '!bg-emerald-50 ring-1 ring-emerald-200',
+  cancelled: '!bg-red-50 ring-1 ring-red-200',
+};
 const STATUS: [Booking['status'], string][] = [['new', 'Нова'], ['confirmed', 'Підтверджена'], ['done', 'Виконана'], ['cancelled', 'Скасована']];
 
 /* ---------- Список із редагуванням (послуги, запчастини) ---------- */
@@ -299,7 +306,7 @@ export default function AdminApp() {
           <label className="mb-1 flex items-center gap-2 text-sm"><input type="checkbox" className="accent-hv" checked={allBookings} onChange={(e) => setAllBookings(e.target.checked)} />Показати минулі та скасовані</label>
           {shown.length === 0 && <p className="card text-slate-500">Заявок поки немає. Нові записи з форми на сайті з’являться тут.</p>}
           {shown.map((b) => (
-            <div key={b.id} className="card flex flex-wrap items-start gap-4 !py-4">
+            <div key={b.id} className={`card flex flex-wrap items-start gap-4 !py-4 ${STATUS_TINT[b.status]}`}>
               <div className="w-32 shrink-0"><div className="font-bold">{fmtDate(b.date)}</div><div className="text-2xl font-black tracking-tight">{b.time.replace(/^0/, '')}</div></div>
               <div className="min-w-0 flex-1 text-sm">
                 <div className="font-semibold">{b.name || 'Без імені'} · <a className="text-hv-deep underline" href={`tel:${b.phone.replace(/[^\d+]/g, '')}`}>{b.phone}</a></div>
