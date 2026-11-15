@@ -1,0 +1,17 @@
+# Скопіюйте у .dev.vars для локальної розробки.
+# У продакшені ті самі назви задаються через `npx wrangler secret put НАЗВА`.
+
+# Пароль входу в /admin (обов'язково)
+ADMIN_PASSWORD=
+
+# Supabase. Поки порожньо, сайт працює в демо-режимі на локальному KV.
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Заявки в Telegram (необов'язково)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# Cloudflare Turnstile для форми запису (необов'язково)
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=

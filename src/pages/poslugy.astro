@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { autoRepairLd, breadcrumbLd, loadSite, price } from '../lib/site';
+
+const { settings, services, nextFree } = await loadSite();
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const KIND: Record<string, string> = { ev: 'EV', hyb: 'гібрид', ice: 'ДВЗ' };
+const title = `Послуги автосервісу ${settings.name} у ${settings.city === 'Київ' ? 'Києві' : settings.city}`;
+const description = `Усі послуги ${settings.name}: ТО, діагностика, ходова, гальма, двигун, гібриди та електромобілі. Ціни «від» і запис онлайн. ${settings.phone}`;
+---
+<Base settings={settings} title={title} description={description} nextFree={nextFree}
+  jsonLd={[autoRepairLd(settings, services, origin), breadcrumbLd(origin, [['Головна', '/'], ['Послуги', '/poslugy/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Послуги</span></nav>
+    <h1>Послуги автосервісу</h1>
+    <p class="lead">Обслуговуємо бензинові, дизельні, гібридні авто та електромобілі. У кожної послуги є своя сторінка з переліком робіт і ціною.</p>
+  </div></div>
+  <div class="page-body"><div class="wrap">
+    <div class="cards">
+      {services.map((s) => (
+        <a class="card-i" href={`/${s.slug}/`}>
+          {s.kind !== 'all' && <span class="tag">{KIND[s.kind]}</span>}
+          <h3>{s.title}</h3>
+          <p>{s.summary}</p>
+          <div class="meta"><span class="cost"><small>від</small>{price(s.price_from)} грн</span><span>{s.duration}</span></div>
+        </a>
+      ))}
+    </div>
+  </div></div>
+</Base>

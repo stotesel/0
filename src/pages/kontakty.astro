@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import Contacts from '../components/Contacts.astro';
+import { addressLine, autoRepairLd, breadcrumbLd, loadSite } from '../lib/site';
+
+const { settings, services, nextFree } = await loadSite();
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const title = `Контакти ${settings.name}: адреса, телефон, маршрут`;
+const description = `${settings.name}: ${addressLine(settings)}. ${settings.hoursText}. Телефон ${settings.phone}. Маршрут у Google Maps і Waze.`;
+---
+<Base settings={settings} title={title} description={description} nextFree={nextFree}
+  jsonLd={[autoRepairLd(settings, services, origin), breadcrumbLd(origin, [['Головна', '/'], ['Контакти', '/kontakty/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Контакти</span></nav>
+  </div></div>
+  <Contacts title="Як нас знайти" settings={settings} tight heading="h1" />
+</Base>

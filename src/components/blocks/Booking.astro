@@ -1,0 +1,27 @@
+---
+import { env } from 'cloudflare:workers';
+import BookingForm from '../BookingForm';
+import type { Service, Settings } from '../../lib/types';
+import { tel } from '../../lib/site';
+interface Props { data: Record<string, any>; settings: Settings; services: Service[]; tight?: boolean; preselect?: string }
+const { data: d, settings, services, tight = false, preselect = '' } = Astro.props;
+---
+<section id="book" style={tight ? 'padding-top:24px' : undefined}>
+  <div class="wrap book">
+    <aside class="book-side">
+      <h2>{d.title}</h2>
+      <p>{d.text}</p>
+      <div class="offer">
+        {d.offerBig && <div><b>{d.offerBig}</b><span>{d.offerText}</span></div>}
+        <a class="call-big" href={tel(settings)}><small>{d.callLabel}</small>{settings.phone}</a>
+      </div>
+    </aside>
+    <BookingForm
+      client:load
+      services={services.map((s) => s.title)}
+      preselect={preselect}
+      doneText={d.doneText}
+      turnstileKey={env.TURNSTILE_SITE_KEY ?? ''}
+    />
+  </div>
+</section>

@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.dev.vars
+.env
+.DS_Store
+worker-configuration.d.ts
+
+# Внутрішні матеріали: не публікуються, бо репозиторій на GitHub публічний
+reference/
+autohub.md
+gepard.md
+hunters_garage.md
+mr_driver.md
+oiler.md
+stop_and_go.md
+stotesel_strategy.md
+img/tesla-top-source.jpg

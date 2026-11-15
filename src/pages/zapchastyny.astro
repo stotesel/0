@@ -1,0 +1,45 @@
+---
+import Base from '../layouts/Base.astro';
+import { breadcrumbLd, loadSite, price, tel } from '../lib/site';
+import { getParts } from '../lib/store';
+
+const [{ settings, nextFree }, parts] = await Promise.all([loadSite(), getParts()]);
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const cats = [...new Set(parts.map((p) => p.category || 'Інше'))];
+const title = `Запчастини та витратні матеріали — ${settings.name}`;
+const description = `Запчастини в ${settings.name}: оливи, фільтри, гальма, ходова. Оригінал або перевірений аналог, підбір за VIN-кодом, встановлення на місці. ${settings.phone}`;
+---
+<Base settings={settings} title={title} description={description} nextFree={nextFree}
+  jsonLd={[breadcrumbLd(origin, [['Головна', '/'], ['Запчастини', '/zapchastyny/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Запчастини</span></nav>
+    <h1>Запчастини</h1>
+    <p class="lead">Підбираємо деталі у двох варіантах, оригінал або перевірений аналог, і встановлюємо на місці. Не знайшли потрібне? Зателефонуйте, привеземо під замовлення.</p>
+  </div></div>
+  <div class="page-body"><div class="wrap">
+    {cats.map((c) => (
+      <>
+        <h2 class="cat-title">{c}</h2>
+        <div class="cards">
+          {parts.filter((p) => (p.category || 'Інше') === c).map((p) => (
+            <article class="card-i">
+              <span class:list={['tag', p.in_stock ? 'ok' : 'wait']}>{p.in_stock ? 'В наявності' : 'Під замовлення'}</span>
+              <h3>{p.title}</h3>
+              <p>{p.description}</p>
+              <div class="meta">
+                {p.price > 0
+                  ? <span class="cost"><small>від</small>{price(p.price)} грн</span>
+                  : <span class="cost ask">Ціна за запитом</span>}
+              </div>
+            </article>
+          ))}
+        </div>
+      </>
+    ))}
+    {parts.length === 0 && <p class="lead">Перелік оновлюється. Зателефонуйте, підкажемо наявність.</p>}
+    <p style="margin-top:36px;display:flex;flex-wrap:wrap;gap:12px">
+      <a class="btn btn-hv" href={tel(settings)}>Уточнити наявність: {settings.phone}</a>
+      <a class="btn btn-ghost" href="/#book">Записатися на заміну</a>
+    </p>
+  </div></div>
+</Base>

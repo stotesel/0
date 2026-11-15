@@ -1,0 +1,123 @@
+---
+// Рендер одного блоку головної сторінки за його типом. Розмітка секцій з макета stotesel.html.
+import { marked } from 'marked';
+import Hero from './blocks/Hero.astro';
+import Booking from './blocks/Booking.astro';
+import Contacts from './Contacts.astro';
+import PriceList from './PriceList.astro';
+import type { Block, Service, Settings } from '../lib/types';
+
+interface Props { block: Block; settings: Settings; services: Service[]; tight: boolean }
+const { block, settings, services, tight } = Astro.props;
+const d = block.data;
+const pad = tight ? 'padding-top:24px' : undefined;
+const whyIcons = [
+  '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  '<path d="M3 7h18v13H3z"/><path d="M8 7V4h8v3"/>',
+  '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>',
+];
+const brands = block.type === 'brands' ? [...(d.items ?? []), ...(d.items ?? [])] : [];
+---
+{block.type === 'hero' && <Hero data={d} settings={settings} services={services} />}
+
+{block.type === 'brands' && (
+  <section style="padding:0">
+    <div class="brands" aria-label="Марки, які ми обслуговуємо">
+      <div class="brands-track">
+        {brands.map((b: string) => <span class:list={{ ev: (d.highlight ?? []).includes(b) }}>{b}</span>)}
+      </div>
+    </div>
+  </section>
+)}
+
+{block.type === 'services' && (
+  <section id="services" style={pad}>
+    <div class="wrap">
+      <div class="sec-head"><h2>{d.title}</h2><p>{d.text}</p></div>
+      <PriceList services={services} foot={d.foot} />
+    </div>
+  </section>
+)}
+
+{block.type === 'process' && (
+  <section id="process" style={pad}>
+    <div class="wrap">
+      <div class="sec-head"><h2>{d.title}</h2><p>{d.text}</p></div>
+      <ol class="steps">
+        {(d.steps ?? []).map((s: any) => <li><h3>{s.title}</h3><p>{s.text}</p></li>)}
+      </ol>
+    </div>
+  </section>
+)}
+
+{block.type === 'why' && (
+  <section id="why" style={pad}>
+    <div class="wrap">
+      <div class="why">
+        <div><h2>{d.title}</h2><p class="lead">{d.text}</p></div>
+        <div class="promises">
+          {(d.items ?? []).map((it: any, i: number) => (
+            <div>
+              <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" set:html={whyIcons[i % whyIcons.length]} />{it.title}</h3>
+              <p>{it.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+{block.type === 'booking' && <Booking data={d} settings={settings} services={services} tight={tight} />}
+
+{block.type === 'faq' && (
+  <section id="faq" style={pad}>
+    <div class="wrap faq">
+      <h2>{d.title}</h2>
+      <div>
+        {(d.items ?? []).map((q: any) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}
+      </div>
+    </div>
+  </section>
+)}
+
+{block.type === 'contacts' && <Contacts title={d.title} settings={settings} tight={tight} />}
+
+{block.type === 'reviews' && (
+  <section id={`b-${block.id}`} style={pad}>
+    <div class="wrap">
+      <div class="sec-head"><h2>{d.title}</h2><p>{d.text}</p></div>
+      <div class="cards">
+        {(d.items ?? []).map((r: any) => (
+          <figure class="card-i">
+            <blockquote><p>{r.text}</p></blockquote>
+            <figcaption class="meta"><b>{r.title}</b><span class="tag wait">{r.car}</span></figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+{block.type === 'banner' && (
+  <section id={`b-${block.id}`} style={pad}>
+    <div class="wrap">
+      <div class="banner">
+        <div><h2>{d.title}</h2><p>{d.text}</p></div>
+        {d.button && <a class="btn btn-ink" href={d.link || '/#book'}>{d.button}</a>}
+      </div>
+    </div>
+  </section>
+)}
+
+{block.type === 'text' && (
+  <section id={`b-${block.id}`} style={pad}>
+    <div class="wrap">
+      <div class="text-block">
+        <h2>{d.title}</h2>
+        <div class="prose" set:html={marked.parse(d.body ?? '')} />
+      </div>
+    </div>
+  </section>
+)}

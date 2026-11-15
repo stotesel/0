@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import Block from '../components/Block.astro';
+import { autoRepairLd, faqLd, loadSite } from '../lib/site';
+
+const { settings, blocks, services, nextFree } = await loadSite();
+const visible = blocks.filter((b) => b.enabled);
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const faq = visible.find((b) => b.type === 'faq');
+const jsonLd: object[] = [autoRepairLd(settings, services, origin)];
+if (faq?.data.items?.length) jsonLd.push(faqLd(faq.data.items));
+// Як у макеті: перша велика секція після hero має повний відступ, наступні стиснуті.
+const firstFull = visible.findIndex((b) => !['hero', 'brands'].includes(b.type));
+---
+<Base settings={settings} title={settings.seoTitle} description={settings.seoDescription} nextFree={nextFree} jsonLd={jsonLd}>
+  {visible.map((block, i) => <Block block={block} settings={settings} services={services} tight={i > firstFull} />)}
+</Base>

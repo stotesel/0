@@ -1,0 +1,52 @@
+---
+// Прайс з макета: фільтр за типом авто, на телефоні перші 6 позицій + кнопка.
+import type { Service } from '../lib/types';
+import { price } from '../lib/site';
+interface Props { services: Service[]; foot?: string; collapsed?: boolean }
+const { services, foot = '', collapsed = true } = Astro.props;
+const KIND: Record<string, string> = { ev: 'EV', hyb: 'гібрид', ice: 'ДВЗ' };
+---
+<div class="tabs" role="group" aria-label="Фільтр послуг" id="tabs">
+  <button type="button" data-f="all" aria-pressed="true">Усі послуги</button>
+  <button type="button" data-f="ice" aria-pressed="false">Бензин / дизель</button>
+  <button type="button" data-f="hyb" aria-pressed="false">Гібриди</button>
+  <button type="button" data-f="ev" aria-pressed="false">Електромобілі</button>
+</div>
+<div class:list={['price', { collapsed }]} id="price">
+  {services.map((s, i) => (
+    <div class:list={['row', { extra: collapsed && i >= 6 }]} data-k={s.kind}>
+      <h3><a href={`/${s.slug}/`}>{s.title}</a>{s.kind !== 'all' && <span class="kind">{KIND[s.kind]}</span>}</h3>
+      <p>{s.summary}</p>
+      <div class="cost"><small>від</small>{price(s.price_from)} грн</div>
+      <div class="time">{s.duration}</div>
+    </div>
+  ))}
+</div>
+{collapsed && services.length > 6 && (
+  <button type="button" class="btn btn-ghost more-btn" id="moreBtn" aria-expanded="false" aria-controls="price">Показати всі послуги</button>
+)}
+{foot && <p class="price-foot">{foot}</p>}
+
+<script is:inline>
+  (() => {
+    const priceEl = document.getElementById('price'), moreBtn = document.getElementById('moreBtn'), tabs = document.getElementById('tabs');
+    moreBtn?.addEventListener('click', () => {
+      const c = priceEl.classList.toggle('collapsed');
+      moreBtn.setAttribute('aria-expanded', !c);
+      moreBtn.textContent = c ? 'Показати всі послуги' : 'Згорнути';
+      if (c) priceEl.scrollIntoView({ block: 'start' });
+    });
+    window.setFilter = (f) => {
+      if (moreBtn) {
+        if (f !== 'all') { priceEl.classList.remove('collapsed'); moreBtn.style.display = 'none'; }
+        else moreBtn.style.removeProperty('display');
+      }
+      tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.f === f));
+      priceEl.querySelectorAll('.row').forEach((r) => {
+        const k = r.dataset.k;
+        r.classList.toggle('hide', !(f === 'all' || k === 'all' || k === f || (f === 'hyb' && k === 'ice')));
+      });
+    };
+    tabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) window.setFilter(b.dataset.f); });
+  })();
+</script>

@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import PriceList from '../components/PriceList.astro';
+import { autoRepairLd, breadcrumbLd, loadSite } from '../lib/site';
+
+const { settings, blocks, services, nextFree } = await loadSite();
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const d = blocks.find((b) => b.type === 'services')?.data ?? {};
+const title = `Ціни на ремонт і обслуговування авто — ${settings.name}`;
+const description = `Прайс ${settings.name}: орієнтовні ціни «від» на ТО, діагностику, ходову, гальма, роботи з гібридами та електромобілями. Кошторис фіксуємо до початку робіт.`;
+---
+<Base settings={settings} title={title} description={description} nextFree={nextFree}
+  jsonLd={[autoRepairLd(settings, services, origin), breadcrumbLd(origin, [['Головна', '/'], ['Ціни', '/tsiny/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Ціни</span></nav>
+    <h1>Ціни на послуги</h1>
+    <p class="lead">{d.text}</p>
+  </div></div>
+  <div class="page-body"><div class="wrap">
+    <PriceList services={services} foot={d.foot} collapsed={false} />
+    <p style="margin-top:28px"><a class="btn btn-hv" href="/#book">Записатися</a></p>
+  </div></div>
+</Base>

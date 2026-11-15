@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+import { getContent } from '../lib/store';
+const { settings } = await getContent();
+Astro.response.status = 404;
+---
+<Base settings={settings} title={`Сторінку не знайдено — ${settings.name}`} description="Такої сторінки немає." noindex>
+  <div class="wrap nf">
+    <h1>4<span>0</span>4</h1>
+    <p>Такої сторінки немає. Можливо, послугу перейменували або посилання застаріло.</p>
+    <p style="display:flex;flex-wrap:wrap;gap:12px"><a class="btn btn-hv" href="/">На головну</a><a class="btn btn-ghost" href="/poslugy/">Усі послуги</a></p>
+  </div>
+</Base>

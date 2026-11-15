@@ -1,0 +1,99 @@
+---
+import '../styles/site.css';
+import '../styles/extra.css';
+import type { Settings } from '../lib/types';
+import { tel } from '../lib/site';
+
+interface Props {
+  settings: Settings;
+  title: string;
+  description: string;
+  nextFree?: string;
+  jsonLd?: object[];
+  noindex?: boolean;
+}
+const { settings, title, description, nextFree = '', jsonLd = [], noindex = false } = Astro.props;
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const canonical = `${origin}${path}`;
+const [brandA, brandB] = [settings.name.slice(0, 3), settings.name.slice(3)];
+const nav = [
+  ['/#services', 'Послуги і ціни'],
+  ['/zapchastyny/', 'Запчастини'],
+  ['/#process', 'Як ми працюємо'],
+  ['/#faq', 'Питання'],
+  ['/kontakty/', 'Контакти'],
+];
+---
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E7E9EB">
+<title>{title}</title>
+<meta name="description" content={description}>
+<link rel="canonical" href={canonical}>
+{noindex && <meta name="robots" content="noindex, nofollow">}
+<meta property="og:type" content="website">
+<meta property="og:locale" content="uk_UA">
+<meta property="og:site_name" content={settings.name}>
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:url" content={canonical}>
+<meta property="og:image" content={`${origin}/img/stotesel-car.png`}>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
+{jsonLd.map((ld) => <script type="application/ld+json" set:html={JSON.stringify(ld).replace(/</g, '\\u003c')} />)}
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a href="/" class="logo" aria-label={`${settings.name}, на головну`}>
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#102030"/><path d="M14.5 4 7 14.5h5.2L11 22l8-11h-5.3z" fill="#F26419"/></svg>
+      <span>{brandA}<b>{brandB}</b></span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Розділи сайту">
+      {nav.map(([href, label]) => <a href={href}>{label}</a>)}
+    </nav>
+    <a class="top-phone" href={tel(settings)}>{settings.phone}<small>{nextFree || settings.phoneNote}</small></a>
+    <a class="btn btn-hv btn-book" href="/#book">Записатися</a>
+    <button class="burger" id="burger" aria-label="Меню" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main>
+  <slot />
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="/" class="logo"><span>{brandA}<b>{brandB}</b></span></a>
+    <span>{settings.footerText}</span>
+    <nav class="foot-nav" aria-label="Сторінки сайту">
+      <a href="/poslugy/">Послуги</a>
+      <a href="/tsiny/">Ціни</a>
+      <a href="/zapchastyny/">Запчастини</a>
+      <a href="/kontakty/">Контакти</a>
+    </nav>
+    <span>© {new Date().getFullYear()} {settings.name}</span>
+  </div>
+</footer>
+
+<div class="dock">
+  <a class="btn btn-ghost" href={tel(settings)}>Подзвонити</a>
+  <a class="btn btn-hv" href="/#book">Записатися</a>
+</div>
+
+<script is:inline>
+  const top_ = document.getElementById('top');
+  addEventListener('scroll', () => top_.classList.toggle('scrolled', scrollY > 10), { passive: true });
+  const burger = document.getElementById('burger'), nav = document.getElementById('nav');
+  burger.addEventListener('click', () => { const o = nav.classList.toggle('open'); burger.setAttribute('aria-expanded', o); });
+  nav.addEventListener('click', (e) => { if (e.target.tagName === 'A') { nav.classList.remove('open'); burger.setAttribute('aria-expanded', false); } });
+</script>
+</body>
+</html>

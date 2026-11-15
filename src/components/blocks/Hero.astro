@@ -1,0 +1,166 @@
+---
+// Перший екран. Ліва частина з макета stotesel.html; права: гравюра Tesla (вид зверху),
+// на якій підсвічується вибраний вузол. Вузол веде на свою послугу з ціною з бази.
+// Гравюру створює scripts/engrave.mjs з фото img/tesla-top-source.jpg.
+import type { Service, Settings } from '../../lib/types';
+import { price, tel } from '../../lib/site';
+import { defaultZones } from '../../lib/seed';
+interface Props { data: Record<string, any>; settings: Settings; services: Service[] }
+const { data: d, settings, services } = Astro.props;
+const [brandA, brandB] = [settings.name.slice(0, 3), settings.name.slice(3)];
+const icons = [
+  '<path d="M9 12l2 2 4-4"/><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  '<path d="M21 8l-9-5-9 5 9 5z"/><path d="M3 8v8l9 5 9-5V8"/>',
+];
+// Частини авто, які вміє підсвічувати гравюра, і місце точки на ній (у % від розміру).
+const PARTS: Record<string, [number, number]> = {
+  battery: [48.75, 50], chassis: [18.3, 89], electronics: [72.8, 50], glass: [28, 22], charge: [4.4, 17.5], climate: [90.6, 50],
+};
+type Zone = { title: string; text: string; slug: string; part: string };
+const saved = ((d.zones ?? []) as Zone[]).filter((z) => PARTS[z.part]);
+const zones = (saved.length ? saved : defaultZones).map((z) => {
+  const s = services.find((x) => x.slug === z.slug);
+  return { ...z, text: z.text || s?.summary || '', service: s, spot: PARTS[z.part] };
+});
+const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y: 124 + Math.floor(i / 10) * 74, d: (i % 10) * 0.09 }));
+---
+<section class="hero" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="wordmark" aria-hidden="true">{brandA}<span class="t">{brandB}</span></div>
+    <div class="hero-tags" aria-label="Що ремонтуємо">
+      {(d.tags ?? []).map((t: string) => <span>{t}</span>)}
+    </div>
+
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <h1>{d.title}</h1>
+        <p>{d.text}</p>
+        <div class="hero-cta">
+          <a class="btn btn-hv" href="#book">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            {d.button}
+          </a>
+          <a class="btn btn-ghost" href={tel(settings)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+            {settings.phone}
+          </a>
+        </div>
+        <ul class="facts">
+          {(d.facts ?? []).map((f: any, i: number) => (
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" set:html={icons[i % icons.length]} />
+              <span><b>{f.title}</b> {f.text}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="bay tesla" id="tesla" data-z="0" data-part={zones[0].part}>
+        <div class="tesla-head">
+          <span class="eyebrow">{d.specLabel ?? 'Спеціалізація'}</span>
+          <h2>{d.specTitle ?? 'Ремонт і обслуговування Tesla'}</h2>
+          <p>{d.specText ?? 'Model S, 3, X та Y. Натисніть на вузол, щоб побачити, що ми з ним робимо.'}</p>
+        </div>
+
+        <div class="tesla-stage">
+          <img class="eng" src="/img/tesla-engraving.webp" width="1200" height="549" alt="Tesla, вид зверху, гравюра" fetchpriority="high">
+          <div class="zlayers" aria-hidden="true">
+            <img class="zl zl-glass" src="/img/tesla-glass.webp" width="1200" height="549" alt="" loading="lazy">
+            <svg viewBox="0 0 1200 549">
+              <defs>
+                <pattern id="zh" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)"><line x1="0" y1="0" x2="0" y2="7" stroke="#F26419" stroke-width="2.4"/></pattern>
+              </defs>
+              <g class="zl zl-battery">
+                <rect class="zs" x="300" y="112" width="570" height="324" rx="20"/>
+                {cells.map((c) => <rect class="cell" x={c.x} y={c.y} width="47" height="66" rx="6" style={`animation-delay:${c.d}s`} />)}
+              </g>
+              <g class="zl zl-chassis">
+                <rect class="zs zf" x="166" y="38" width="108" height="44" rx="14"/><rect class="zs zf" x="166" y="467" width="108" height="44" rx="14"/>
+                <rect class="zs zf" x="921" y="38" width="108" height="44" rx="14"/><rect class="zs zf" x="921" y="467" width="108" height="44" rx="14"/>
+                <path class="zs" d="M220 82V467M975 82V467M220 150h46M220 399h46M975 150h-46M975 399h-46"/>
+                <circle class="zs zf" cx="220" cy="274.5" r="26"/><circle class="zs zf" cx="975" cy="274.5" r="20"/>
+              </g>
+              <g class="zl zl-electronics">
+                <rect class="zs zf" x="848" y="142" width="52" height="264" rx="16"/>
+                <rect class="zs" x="806" y="250" width="34" height="49" rx="6"/>
+                <path class="zs dash" d="M806 274.5H96M900 190C990 160 1070 118 1128 104M900 359C990 389 1070 431 1128 445"/>
+                <circle class="zd" cx="96" cy="274.5" r="8"/><circle class="zd" cx="1128" cy="104" r="8"/><circle class="zd" cx="1128" cy="445" r="8"/>
+                <circle class="zd" cx="420" cy="274.5" r="6"/><circle class="zd" cx="640" cy="274.5" r="6"/>
+              </g>
+              <g class="zl zl-charge">
+                <circle class="zs zf" cx="52" cy="96" r="17"/><circle class="ring" cx="52" cy="96" r="17"/>
+                <path class="zs dash flow" d="M42 82C22 52 -6 34 -44 26"/>
+              </g>
+              <g class="zl zl-climate">
+                <rect class="zs zf" x="1034" y="196" width="108" height="157" rx="18"/>
+                <circle class="zs" cx="1088" cy="274.5" r="40"/>
+                <path class="zs fan" d="M1088 240v69M1053.500 274.500h69M1064 250l48 49M1112 250l-48 49"/>
+              </g>
+            </svg>
+          </div>
+          {zones.map((z, i) => (
+            <button type="button" class="hot" data-i={i} data-part={z.part} style={`left:${z.spot[0]}%;top:${z.spot[1]}%`} aria-label={z.title} aria-pressed={i === 0 ? 'true' : 'false'}>{i + 1}</button>
+          ))}
+        </div>
+
+        <div class="tesla-chips" role="group" aria-label="Вузли автомобіля">
+          {zones.map((z, i) => <button type="button" data-i={i} data-part={z.part} aria-pressed={i === 0 ? 'true' : 'false'}><b>{i + 1}</b>{z.title}</button>)}
+        </div>
+
+        <div class="tesla-info" aria-live="polite">
+          {zones.map((z, i) => (
+            <div class:list={['tesla-panel', { on: i === 0 }]} data-i={i}>
+              <div>
+                <h3>{z.title}</h3>
+                <p>{z.text}</p>
+              </div>
+              {z.service && (
+                <div class="tesla-cost">
+                  <span><small>від</small>{price(z.service.price_from)} грн</span>
+                  <a href={`/${z.service.slug}/`}>Детальніше</a>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <p class="bay-note">{d.note ?? 'Також обслуговуємо бензинові, дизельні та гібридні авто.'} <a href="#services">Усі послуги й ціни</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (() => {
+    const root = document.getElementById('tesla');
+    const n = root.querySelectorAll('.tesla-panel').length;
+    let timer = null;
+    const layers = root.querySelector('.zlayers');
+    function select(i) {
+      root.dataset.z = i;
+      root.dataset.part = root.querySelector(`.hot[data-i="${i}"]`).dataset.part;
+      // перезапуск анімації «проявлення» підсвітки
+      layers.classList.remove('scan'); void layers.offsetWidth; layers.classList.add('scan');
+      root.querySelectorAll('.hot, .tesla-chips button').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
+      root.querySelectorAll('.tesla-panel').forEach((p) => p.classList.toggle('on', +p.dataset.i === i));
+      // активна кнопка завжди в полі зору; гортаємо лише сам ряд, а не сторінку
+      const chips = root.querySelector('.tesla-chips'), chip = chips.querySelector(`[data-i="${i}"]`);
+      chips.scrollTo({ left: chip.offsetLeft - (chips.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+    }
+    root.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-i]');
+      if (!b) return;
+      clearInterval(timer); // після першого вибору вузли більше не перемикаються самі
+      select(+b.dataset.i);
+    });
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && n > 1) {
+      timer = setInterval(() => select((+root.dataset.z + 1) % n), 3500);
+    }
+
+    /* великий напис завжди точно на всю ширину контейнера */
+    const wm = document.querySelector('.wordmark');
+    function fitWord() { wm.style.fontSize = '100px'; const cs = getComputedStyle(wm.parentElement), W = wm.parentElement.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); wm.style.fontSize = Math.min(220, 100 * W / wm.scrollWidth * 0.995) + 'px'; }
+    addEventListener('resize', fitWord); fitWord();
+    document.fonts.ready.then(fitWord);
+  })();
+</script>
