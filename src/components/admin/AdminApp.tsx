@@ -1,10 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Block, Booking, DaySlots, Part, Schedule, Service, Settings } from '../../lib/types';
 
 interface Data {
   mode: 'supabase' | 'demo';
   settings: Settings;
   blocks: Block[];
+  privacy: string;
   schedule: Schedule;
   services: Service[];
   parts: Part[];
@@ -172,6 +173,7 @@ const SETTINGS_FIELDS: Field[] = [
   { key: 'viber', label: 'Viber (номер)' },
   { key: 'whatsapp', label: 'WhatsApp (номер)' },
   { key: 'footerText', label: 'Текст у підвалі', type: 'area' },
+  { key: 'ga4Id', label: 'Google Analytics 4: Measurement ID', hint: 'Вигляд G-XXXXXXXXXX (GA4 → Адміністратор → Потоки даних). Порожнє поле вимикає аналітику.' },
   { key: 'seoTitle', label: 'SEO-заголовок головної' },
   { key: 'seoDescription', label: 'SEO-опис головної', type: 'area' },
 ];
@@ -236,10 +238,11 @@ export default function AdminApp() {
   const [err, setErr] = useState('');
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [privacy, setPrivacy] = useState('');
   const [open, setOpen] = useState('');
   const [allBookings, setAllBookings] = useState(false);
 
-  function apply(d: Data) { setData(d); setBlocks(d.blocks); setSettings(d.settings); }
+  function apply(d: Data) { setData(d); setBlocks(d.blocks); setSettings(d.settings); setPrivacy(d.privacy); }
   async function load() {
     const r = await fetch('/api/admin/data');
     if (r.status === 401) return setAuth('no');
@@ -377,18 +380,64 @@ export default function AdminApp() {
         <section className="card">
           <Form fields={SETTINGS_FIELDS} value={settings} onChange={setSettings} />
           <button className="btn-a mt-5" onClick={() => act({ action: 'content', key: 'settings', value: settings })}>Зберегти налаштування</button>
+          <div className="mt-8 border-t border-slate-200 pt-6">
+            <h2 className="mb-1 font-bold">Політика конфіденційності</h2>
+            <p className="mb-3 text-sm text-slate-600">
+              Текст сторінки /polityka-konfidentsiynosti/ у форматі Markdown. Змінні підставляються з налаштувань: {'{{name}}'}, {'{{address}}'}, {'{{phone}}'}, {'{{email}}'}, {'{{site}}'}. Це типовий шаблон: перед публікацією його варто перевірити юристу й додати реквізити власника.
+            </p>
+            <textarea className="inp min-h-96 font-mono" value={privacy} onChange={(e) => setPrivacy(e.target.value)} />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button className="btn-a" onClick={() => act({ action: 'content', key: 'privacy', value: privacy }, 'Політику збережено')}>Зберегти політику</button>
+              <a className="btn-b" href="/polityka-konfidentsiynosti/" target="_blank" rel="noopener">Відкрити сторінку</a>
+            </div>
+          </div>
         </section>
       )}
     </div>
   );
 }
 
-function ScheduleTab({ data, onSave }: { data: Data; onSave: (s: Schedule) => void }) {
+function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)}
+      className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${on ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+      <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+    </button>
+  );
+}
+
+function ScheduleTab({ data, onSave: saveSchedule }: { data: Data; onSave: (s: Schedule) => void | Promise<unknown> }) {
   const s = data.schedule;
-  const [tpl, setTpl] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(s.template).map(([k, v]) => [k, v.join(', ')])));
+  // Поки йде збереження, наступні кліки ігноруються: інакше вони спрацювали б зі старим станом.
+  const busy = useRef(false);
+  const onSave = async (next: Schedule) => {
+    if (busy.current) return;
+    busy.current = true;
+    try { await saveSchedule(next); } finally { busy.current = false; }
+  };
   const [horizon, setHorizon] = useState(s.horizonDays);
   const [extra, setExtra] = useState<Record<string, string>>({});
-  const [bad, setBad] = useState('');
+  const [newTime, setNewTime] = useState<Record<number, string>>({});
+
+  const week = [1, 2, 3, 4, 5, 6, 0];
+  // для старих даних без offDays день без годин вважається вимкненим
+  const offDays = s.offDays ?? week.filter((d) => (s.template[String(d)] ?? []).length === 0).map(String);
+  // усі години, які колись були в тижні: у кожному дні їх можна вмикати й вимикати
+  const grid = [...new Set(week.flatMap((d) => s.template[String(d)] ?? []))].sort();
+
+  const setWeekday = (d: number, on: boolean) =>
+    onSave({ ...s, offDays: on ? offDays.filter((x) => x !== String(d)) : [...new Set([...offDays, String(d)])] });
+  const toggleTime = (d: number, t: string) => {
+    const cur = s.template[String(d)] ?? [];
+    onSave({ ...s, offDays, template: { ...s.template, [String(d)]: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t].sort() } });
+  };
+  const addTime = (d: number) => {
+    const t = normTime(newTime[d] ?? '');
+    if (!t) return;
+    const cur = s.template[String(d)] ?? [];
+    onSave({ ...s, offDays, template: { ...s.template, [String(d)]: [...new Set([...cur, t])].sort() } });
+    setNewTime({ ...newTime, [d]: '' });
+  };
 
   const ov = (date: string) => {
     const o = s.overrides[date];
@@ -397,80 +446,104 @@ function ScheduleTab({ data, onSave }: { data: Data; onSave: (s: Schedule) => vo
   const setOv = (date: string, patch: Partial<Schedule['overrides'][string]>) =>
     onSave({ ...s, overrides: { ...s.overrides, [date]: { ...ov(date), ...patch } } });
 
-  function saveTemplate() {
-    const template: Record<string, string[]> = {};
-    for (const [k, v] of Object.entries(tpl)) {
-      const times = v.split(/[,\s]+/).filter(Boolean).map(normTime);
-      if (times.includes(null)) return setBad(`Перевірте час у дні «${DOW[+k]}»: формат ГГ:ХХ через кому`);
-      template[k] = [...new Set(times as string[])].sort();
-    }
-    setBad('');
-    // прибираємо винятки для дат, що вже минули
-    const overrides = Object.fromEntries(Object.entries(s.overrides).filter(([d]) => d >= data.days[0].date));
-    onSave({ ...s, template, overrides, horizonDays: Math.min(60, Math.max(1, horizon)) });
-  }
-
   const chip = 'rounded-full border px-3 py-1.5 text-sm font-medium';
   return (
     <section className="grid gap-5">
       <div className="card">
         <h2 className="mb-1 font-bold">Типовий тиждень</h2>
-        <p className="mb-4 text-sm text-slate-600">Час початку візитів для кожного дня через кому. Порожнє поле означає вихідний.</p>
-        <div className="grid gap-3 md:grid-cols-2">
-          {[1, 2, 3, 4, 5, 6, 0].map((d) => (
-            <label key={d} className="flex items-center gap-3 text-sm">
-              <span className="w-8 font-semibold">{DOW[d]}</span>
-              <input className="inp" value={tpl[d] ?? ''} placeholder="вихідний" onChange={(e) => setTpl({ ...tpl, [d]: e.target.value })} />
-            </label>
-          ))}
+        <p className="mb-4 text-sm text-slate-600">
+          Перемикач вмикає або вимикає цілий день, натискання на годину вмикає або вимикає її в цьому дні. Зміни застосовуються одразу.
+        </p>
+        <div className="grid gap-4">
+          {week.map((d) => {
+            const working = !offDays.includes(String(d));
+            const times = s.template[String(d)] ?? [];
+            return (
+              <div key={d} className={`flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200 pt-3 ${working ? '' : 'opacity-60'}`}>
+                <div className="flex w-40 items-center gap-3">
+                  <Switch on={working} onChange={(v) => setWeekday(d, v)} label={`${DOW[d]}: працює`} />
+                  <span className="font-semibold">{DOW[d]}</span>
+                  <span className="text-xs text-slate-500">{working ? 'працює' : 'вихідний'}</span>
+                </div>
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                  {grid.map((t) => {
+                    const on = times.includes(t);
+                    return (
+                      <button key={t} type="button" aria-pressed={on} onClick={() => toggleTime(d, t)}
+                        className={`${chip} cursor-pointer ${on ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' : 'border-slate-300 bg-slate-100 text-slate-400 line-through hover:bg-slate-200'}`}>
+                        {t.replace(/^0/, '')}
+                      </button>
+                    );
+                  })}
+                  <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); addTime(d); }}>
+                    <input className="inp !w-24" placeholder="14:00" aria-label={`Додати годину в день ${DOW[d]}`} value={newTime[d] ?? ''} onChange={(e) => setNewTime({ ...newTime, [d]: e.target.value })} />
+                    <button className="btn-b">+ час</button>
+                  </form>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-4">
           <label className="flex items-center gap-2 text-sm">Запис відкритий на <input type="number" min={1} max={60} className="inp !w-20" value={horizon} onChange={(e) => setHorizon(+e.target.value)} /> днів наперед</label>
-          <button className="btn-a" onClick={saveTemplate}>Зберегти тиждень</button>
-          {bad && <span className="text-sm text-red-700">{bad}</span>}
+          <button className="btn-b" onClick={() => onSave({ ...s, offDays, horizonDays: Math.min(60, Math.max(1, horizon || 1)) })}>Зберегти</button>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="mb-1 font-bold">Слоти по днях</h2>
+        <h2 className="mb-1 font-bold">Слоти по датах</h2>
         <p className="mb-4 text-sm text-slate-600">
-          Натисніть на вільний час, щоб закрити його для запису, і ще раз, щоб відкрити.
+          Перемикач біля дати вмикає або вимикає цілий день. Натисніть на час, щоб закрити його для запису, і ще раз, щоб відкрити. Це працює лише для обраної дати й має перевагу над типовим тижнем.
           <span className={`${chip} ml-2 border-emerald-300 bg-emerald-50 text-emerald-800`}>вільно</span>
           <span className={`${chip} ml-1 border-slate-300 bg-slate-100 text-slate-500 line-through`}>закрито</span>
           <span className={`${chip} ml-1 border-orange-300 bg-orange-100 text-orange-900`}>запис</span>
         </p>
         <div className="grid gap-4">
-          {data.days.map((d) => (
-            <div key={d.date} className="border-t border-slate-200 pt-3">
-              <div className="mb-2 flex flex-wrap items-center gap-3">
-                <b className="w-28">{fmtDate(d.date)}</b>
-                <label className="flex items-center gap-1 text-sm"><input type="checkbox" className="accent-hv" checked={d.dayOff} onChange={(e) => setOv(d.date, { dayOff: e.target.checked })} />вихідний</label>
-                <form className="ml-auto flex gap-2" onSubmit={(e) => {
-                  e.preventDefault();
-                  const t = normTime(extra[d.date] ?? '');
-                  if (!t) return;
-                  setOv(d.date, { extra: [...new Set([...ov(d.date).extra, t])], closed: ov(d.date).closed.filter((x) => x !== t), dayOff: false });
-                  setExtra({ ...extra, [d.date]: '' });
-                }}>
-                  <input className="inp !w-24" placeholder="14:00" aria-label={`Додати час на ${fmtDate(d.date)}`} value={extra[d.date] ?? ''} onChange={(e) => setExtra({ ...extra, [d.date]: e.target.value })} />
-                  <button className="btn-b">+ час</button>
-                </form>
+          {data.days.map((d) => {
+            const times = d.slots.filter((x) => x.state !== 'booked' && x.state !== 'past').map((x) => x.time);
+            return (
+              <div key={d.date} className="border-t border-slate-200 pt-3">
+                <div className="mb-2 flex flex-wrap items-center gap-3">
+                  <Switch on={!d.dayOff} onChange={(v) => setOv(d.date, { dayOff: !v })} label={`${fmtDate(d.date)}: працює`} />
+                  <b className="w-28">{fmtDate(d.date)}</b>
+                  <span className="text-xs text-slate-500">{d.dayOff ? 'вихідний' : 'працює'}</span>
+                  {d.slots.length > 0 && (
+                    <>
+                      <button className="btn-b" onClick={() => setOv(d.date, { dayOff: false, closed: [] })}>Відкрити всі</button>
+                      <button className="btn-b" onClick={() => setOv(d.date, { closed: times })}>Закрити всі</button>
+                    </>
+                  )}
+                  <form className="ml-auto flex gap-2" onSubmit={(e) => {
+                    e.preventDefault();
+                    const t = normTime(extra[d.date] ?? '');
+                    if (!t) return;
+                    setOv(d.date, { extra: [...new Set([...ov(d.date).extra, t])], closed: ov(d.date).closed.filter((x) => x !== t), dayOff: false });
+                    setExtra({ ...extra, [d.date]: '' });
+                  }}>
+                    <input className="inp !w-24" placeholder="14:00" aria-label={`Додати час на ${fmtDate(d.date)}`} value={extra[d.date] ?? ''} onChange={(e) => setExtra({ ...extra, [d.date]: e.target.value })} />
+                    <button className="btn-b">+ час</button>
+                  </form>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {d.slots.length === 0 && <span className="text-sm text-slate-500">Немає годин: додайте час у типовому тижні або тут</span>}
+                  {d.slots.map((x) => {
+                    const t = x.time.replace(/^0/, '');
+                    if (x.state === 'booked') return <span key={x.time} className={`${chip} border-orange-300 bg-orange-100 text-orange-900`} title={`${x.booking?.phone ?? ''} ${x.booking?.service ?? ''}`}>{t} · {x.booking?.name || x.booking?.phone}</span>;
+                    if (x.state === 'past') return <span key={x.time} className={`${chip} border-slate-200 text-slate-300`}>{t}</span>;
+                    const closed = x.state === 'closed';
+                    // у вихідний день натискання на час спершу вмикає день і відкриває лише цей час
+                    const toggle = () => d.dayOff
+                      ? setOv(d.date, { dayOff: false, closed: times.filter((c) => c !== x.time) })
+                      : setOv(d.date, { closed: closed ? ov(d.date).closed.filter((c) => c !== x.time) : [...ov(d.date).closed, x.time] });
+                    return (
+                      <button key={x.time} aria-pressed={!closed} className={`${chip} cursor-pointer ${closed ? 'border-slate-300 bg-slate-100 text-slate-500 line-through hover:bg-slate-200' : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'}`}
+                        onClick={toggle}>{t}</button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {d.slots.length === 0 && <span className="text-sm text-slate-500">Немає слотів</span>}
-                {d.slots.map((x) => {
-                  const t = x.time.replace(/^0/, '');
-                  if (x.state === 'booked') return <span key={x.time} className={`${chip} border-orange-300 bg-orange-100 text-orange-900`} title={`${x.booking?.phone ?? ''} ${x.booking?.service ?? ''}`}>{t} · {x.booking?.name || x.booking?.phone}</span>;
-                  if (x.state === 'past') return <span key={x.time} className={`${chip} border-slate-200 text-slate-300`}>{t}</span>;
-                  const closed = x.state === 'closed';
-                  return (
-                    <button key={x.time} aria-pressed={!closed} className={`${chip} cursor-pointer ${closed ? 'border-slate-300 bg-slate-100 text-slate-500 line-through' : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'}`}
-                      onClick={() => setOv(d.date, { closed: closed ? ov(d.date).closed.filter((c) => c !== x.time) : [...ov(d.date).closed, x.time] })}>{t}</button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

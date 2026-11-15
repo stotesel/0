@@ -8,7 +8,7 @@ import {
 } from '../../../lib/store';
 
 const TABLES: Table[] = ['services', 'parts'];
-const KEYS: ContentKey[] = ['settings', 'blocks', 'schedule'];
+const KEYS: ContentKey[] = ['settings', 'blocks', 'schedule', 'privacy'];
 
 async function snapshot() {
   await ensureSeeded();

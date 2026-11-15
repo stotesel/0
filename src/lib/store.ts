@@ -2,10 +2,10 @@
 //  - Supabase (PostgREST через fetch із service role ключем, тільки на сервері);
 //  - демо на Cloudflare KV, коли змінні Supabase не задані.
 import { env } from 'cloudflare:workers';
-import { seedBlocks, seedParts, seedSchedule, seedServices, seedSettings } from './seed';
+import { seedBlocks, seedParts, seedPrivacy, seedSchedule, seedServices, seedSettings } from './seed';
 import type { Block, Booking, Part, Schedule, Service, SiteContent } from './types';
 
-export type ContentKey = 'settings' | 'blocks' | 'schedule';
+export type ContentKey = 'settings' | 'blocks' | 'schedule' | 'privacy';
 export type Table = 'services' | 'parts';
 type Row = { id: string; enabled: boolean; sort: number };
 
@@ -19,6 +19,7 @@ const seeds: Record<Table, Row[]> = { services: seedServices, parts: seedParts }
 
 function withDefaults(c: Partial<SiteContent>): SiteContent {
   return {
+    privacy: typeof c.privacy === 'string' && c.privacy.trim() ? c.privacy : seedPrivacy,
     settings: { ...seedSettings, ...(c.settings ?? {}) },
     blocks: (c.blocks as Block[]) ?? seedBlocks,
     schedule: { ...seedSchedule, ...(c.schedule ?? {}) } as Schedule,

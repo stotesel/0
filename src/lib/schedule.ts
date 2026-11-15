@@ -41,18 +41,21 @@ export function buildDays(schedule: Schedule, bookings: Booking[], days = schedu
     const dow = dowOf(date);
     const o = schedule.overrides[date] ?? { closed: [], extra: [] };
     const times = [...new Set([...(schedule.template[String(dow)] ?? []), ...(o.extra ?? [])])].sort();
-    const slots = (o.dayOff ? [] : times).map((time) => {
+    // Вимкнений день тижня: явний список offDays, а для старих даних день без годин
+    const weekdayOff = schedule.offDays ? schedule.offDays.includes(String(dow)) : (schedule.template[String(dow)] ?? []).length === 0;
+    const off = o.dayOff ?? weekdayOff; // виняток на конкретну дату сильніший за день тижня
+    const slots = times.map((time) => {
       const booking = bookings.find((b) => b.date === date && b.time === time && b.status !== 'cancelled');
       const state = booking
         ? ('booked' as const)
-        : (o.closed ?? []).includes(time)
+        : off || (o.closed ?? []).includes(time)
           ? ('closed' as const)
           : date === now.date && time <= now.time
             ? ('past' as const)
             : ('free' as const);
       return { time, state, booking };
     });
-    out.push({ date, dow, dayOff: !!o.dayOff, slots });
+    out.push({ date, dow, dayOff: off, slots });
   }
   return out;
 }

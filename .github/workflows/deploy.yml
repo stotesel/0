@@ -24,9 +24,9 @@ jobs:
       - name: Пропуск, якщо секрети Cloudflare ще не додані
         if: ${{ env.CLOUDFLARE_API_TOKEN == '' }}
         run: echo "::warning::Додайте CLOUDFLARE_API_TOKEN і CLOUDFLARE_ACCOUNT_ID у секрети репозиторію"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
         with:
           node-version: 22

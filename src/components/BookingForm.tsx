@@ -7,6 +7,7 @@ interface Props { services: string[]; preselect?: string; doneText: string; turn
 
 const TYPES = ['Бензин / дизель', 'Газ / ГБО', 'Гібрид', 'Електромобіль'];
 const FIRST = 'Не знаю, потрібна діагностика';
+const resetTurnstile = () => (window as any).turnstile?.reset?.();
 
 /** Українські 9 цифр після коду країни: приймає +380…, 380…, 0… або просто цифри (у тому числі вставлені). */
 function nationalDigits(raw: string): string {
@@ -87,13 +88,16 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
       const r = await fetch('/api/booking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await r.json();
       if (!r.ok) {
+        resetTurnstile(); // токен одноразовий: після помилки потрібен новий
         setError(data.error ?? 'Не вдалося надіслати заявку. Зателефонуйте нам, будь ласка.');
         if (r.status === 409) await load(date);
         return;
       }
+      (window as any).gtag?.('event', 'generate_lead', { service: String(f.get('svc') ?? ''), car_type: type });
       setSent({ when: `${current?.dow}, ${current?.day}, ${time.replace(/^0/, '')}`, car: String(f.get('car') ?? ''), svc: String(f.get('svc') ?? '') });
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch {
+      resetTurnstile();
       setError('Немає зв’язку із сервером. Спробуйте ще раз або зателефонуйте.');
     } finally {
       setBusy(false);
@@ -184,7 +188,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
         <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }} />
         {turnstileKey && <div ref={tsRef} className="cf-turnstile" data-sitekey={turnstileKey} style={{ marginBottom: 16 }} />}
         <div className="form-foot">
-          <small>Натискаючи кнопку, ви погоджуєтесь на обробку персональних даних і дзвінок для підтвердження запису.</small>
+          <small>Натискаючи кнопку, ви погоджуєтесь на обробку персональних даних і дзвінок для підтвердження запису. <a href="/polityka-konfidentsiynosti/" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>Політика конфіденційності</a></small>
           <button className="btn btn-ink" type="submit" disabled={busy}>{busy ? 'Надсилаємо…' : 'Надіслати заявку'}</button>
         </div>
         {error && <div className="form-err" role="alert">{error}</div>}

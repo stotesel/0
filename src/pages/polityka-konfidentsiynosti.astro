@@ -1,0 +1,30 @@
+---
+import { marked } from 'marked';
+import Base from '../layouts/Base.astro';
+import { addressLine, breadcrumbLd } from '../lib/site';
+import { getContent } from '../lib/store';
+
+const { settings, privacy } = await getContent();
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const vars: Record<string, string> = {
+  name: settings.name,
+  address: addressLine(settings),
+  phone: settings.phone,
+  email: settings.email || 'вкажіть пошту в налаштуваннях',
+  site: origin.replace(/^https?:\/\//, ''),
+};
+const text = privacy.replace(/\{\{(\w+)\}\}/g, (m, k) => vars[k] ?? m);
+const html = marked.parse(text) as string;
+const title = `Політика конфіденційності — ${settings.name}`;
+const description = `Які персональні дані збирає сайт ${settings.name}, навіщо й як ними керувати.`;
+---
+<Base settings={settings} title={title} description={description}
+  jsonLd={[breadcrumbLd(origin, [['Головна', '/'], ['Політика конфіденційності', '/polityka-konfidentsiynosti/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Політика конфіденційності</span></nav>
+    <h1>Політика конфіденційності</h1>
+  </div></div>
+  <div class="page-body"><div class="wrap">
+    <div class="svc-card prose legal" set:html={html} />
+  </div></div>
+</Base>

@@ -40,6 +40,7 @@ export interface Settings {
   seoTitle: string;
   seoDescription: string;
   priceRange: string;
+  ga4Id: string; // Google Analytics 4, вигляд G-XXXXXXXXXX; порожнє вимикає аналітику
 }
 
 export interface Block {
@@ -57,7 +58,8 @@ export interface DayOverride {
 
 export interface Schedule {
   horizonDays: number;
-  template: Record<string, string[]>; // ключ: день тижня 0 (нд) … 6 (сб)
+  template: Record<string, string[]>; // ключ: день тижня 0 (нд) … 6 (сб); значення: увімкнені години
+  offDays?: string[]; // дні тижня, що вимкнені цілком (години зберігаються, щоб увімкнути одним кліком)
   overrides: Record<string, DayOverride>; // ключ: дата YYYY-MM-DD
 }
 
@@ -79,6 +81,7 @@ export interface Booking {
 }
 
 export interface SiteContent {
+  privacy: string; // Markdown політики конфіденційності
   settings: Settings;
   blocks: Block[];
   schedule: Schedule;
