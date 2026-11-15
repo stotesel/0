@@ -304,6 +304,7 @@ export default function AdminApp() {
                 {b.vin && <div className="font-mono text-slate-600">VIN: {b.vin}</div>}
                 <div>{b.service}</div>
                 {b.note && <div className="mt-1 text-slate-500">«{b.note}»</div>}
+                <div className="mt-1 text-xs text-slate-400">Створено: {new Date(b.created_at).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv', dateStyle: 'short', timeStyle: 'short' })}</div>
               </div>
               <select className="inp !w-40" value={b.status} onChange={(e) => act({ action: 'booking', id: b.id, status: e.target.value }, e.target.value === 'cancelled' ? 'Скасовано, слот знову вільний' : 'Збережено')}>
                 {STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}

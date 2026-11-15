@@ -6,6 +6,14 @@ import { addBooking, getBookings, getContent, SlotTakenError } from '../../lib/s
 
 const clean = (v: unknown, max: number) => String(v ?? '').replace(/[\u0000-\u001f<>]/g, ' ').trim().slice(0, max);
 
+/** Дата й час створення заявки за Києвом: 15.11.2026, 10:58 */
+function createdLabel(iso: string | undefined): string {
+  const d = iso ? new Date(iso) : new Date();
+  return new Intl.DateTimeFormat('uk-UA', {
+    timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).format(Number.isNaN(d.getTime()) ? new Date() : d);
+}
+
 async function turnstileOk(token: unknown, ip: string | null) {
   if (!env.TURNSTILE_SECRET_KEY) return true; // Turnstile ще не підключено
   const body = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: String(token ?? '') });
@@ -62,6 +70,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       row.vin && `VIN: ${row.vin}`,
       row.service,
       row.note && `Коментар: ${row.note}`,
+      `Створено: ${createdLabel(row.created_at)}`,
     ].filter(Boolean).join('\n');
     // Сповіщення не затримує відповідь клієнту і не ламає запис, якщо Telegram недоступний.
     const job = notifyTelegram(msg).catch((e) => console.error('telegram', e));

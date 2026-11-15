@@ -8,11 +8,27 @@ interface Props { services: string[]; preselect?: string; doneText: string; turn
 const TYPES = ['Бензин / дизель', 'Газ / ГБО', 'Гібрид', 'Електромобіль'];
 const FIRST = 'Не знаю, потрібна діагностика';
 
+/** Українські 9 цифр після коду країни: приймає +380…, 380…, 0… або просто цифри (у тому числі вставлені). */
+function nationalDigits(raw: string): string {
+  let d = raw.replace(/\D/g, '');
+  if (d.startsWith('380')) d = d.slice(3);
+  else if (d.length <= 2 && '380'.startsWith(d)) d = ''; // користувач стирає префікс: +38, +3
+  if (d.startsWith('0')) d = d.slice(1); // національний формат 066…: нуль не входить до 9 цифр
+  return d.slice(0, 9);
+}
+function formatPhone(raw: string): string {
+  const d = nationalDigits(raw);
+  if (!d) return '';
+  const g = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean);
+  return `+380 ${g.join(' ')}`;
+}
+
 export default function BookingForm({ services, preselect = '', doneText, turnstileKey = '' }: Props) {
   const [days, setDays] = useState<Day[] | null>(null);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [type, setType] = useState(TYPES[0]);
+  const [phone, setPhone] = useState('');
   const [phoneBad, setPhoneBad] = useState(false);
   const [vinBad, setVinBad] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -50,8 +66,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    const digits = String(f.get('phone') ?? '').replace(/\D/g, '');
-    const ok = digits.length === 10 || (digits.length === 12 && digits.startsWith('380'));
+    const ok = nationalDigits(phone).length === 9;
     setPhoneBad(!ok);
     if (!ok) return (e.currentTarget.elements.namedItem('phone') as HTMLInputElement).focus();
     // VIN необов'язковий, але якщо введений, то це 17 латинських літер і цифр без I, O, Q
@@ -151,8 +166,14 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
           </div>
           <div className={`field${phoneBad ? ' invalid' : ''}`} id="f-phone">
             <label htmlFor="phone">Телефон</label>
-            <input type="tel" id="phone" name="phone" placeholder="050 000 00 00" autoComplete="tel" inputMode="tel" maxLength={20} />
-            <div className="err">Вкажіть номер з 10 цифр, щоб ми могли підтвердити запис.</div>
+            <input
+              type="tel" id="phone" name="phone" placeholder="+380 50 000 00 00" autoComplete="tel" inputMode="tel" maxLength={17}
+              value={phone}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
+              onFocus={() => !phone && setPhone('+380 ')}
+              onBlur={() => !nationalDigits(phone) && setPhone('')}
+            />
+            <div className="err">Вкажіть номер у форматі +380 XX XXX XX XX, щоб ми могли підтвердити запис.</div>
           </div>
         </div>
         <div className="field">
