@@ -53,6 +53,7 @@ export function autoRepairLd(s: Settings, services: Service[], origin: string) {
     name: s.name,
     url: `${origin}/`,
     image: `${origin}/img/stotesel-car.png`,
+    logo: `${origin}/icon-512.png`,
     telephone: s.phoneE164,
     ...(s.email ? { email: s.email } : {}),
     priceRange: s.priceRange,
