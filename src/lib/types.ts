@@ -42,6 +42,7 @@ export interface Settings {
   priceRange: string;
   ga4Id: string; // Google Analytics 4, вигляд G-XXXXXXXXXX; порожнє вимикає аналітику
   googleVerification: string; // код із мета-тегу google-site-verification (Search Console)
+  districts: string; // райони поруч через кому: для розмітки areaServed і SEO-текстів
   directions: string; // Markdown: як доїхати, орієнтири; показується на /kontakty/
 }
 

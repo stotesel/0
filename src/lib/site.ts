@@ -12,6 +12,21 @@ export async function loadSite() {
 export const tel = (s: Settings) => `tel:${s.phoneE164}`;
 export const addressLine = (s: Settings) => `${s.street}, ${s.city}`;
 export const price = (n: number) => n.toLocaleString('uk-UA').replace(/ /g, ' ');
+/** Ціна 0 у послузі означає «за запитом» (напр. шиномонтаж, де все залежить від радіуса). */
+export const PRICE_ON_REQUEST = 'за запитом';
+
+/** Райони з налаштувань: «Нивки, Виноградар» → ['Нивки', 'Виноградар']. */
+export const districtList = (s: Settings) => (s.districts || '').split(',').map((x) => x.trim()).filter(Boolean);
+/** «Нивки та Виноградар» для текстів; порожньо, якщо районів немає. */
+export const districtPhrase = (s: Settings, sep = ' та ') => {
+  const d = districtList(s);
+  return d.length < 2 ? d.join('') : `${d.slice(0, -1).join(', ')}${sep}${d[d.length - 1]}`;
+};
+/** Місто плюс райони для schema.org areaServed. */
+export const areaServed = (s: Settings) => {
+  const d = districtList(s);
+  return d.length ? [s.city, ...d.map((name) => ({ '@type': 'Place', name: `${name}, ${s.city}` }))] : s.city;
+};
 
 export function mapLinks(s: Settings) {
   // Якщо в налаштуваннях задані координати, мітка й маршрути ведуть точно на них,
@@ -41,6 +56,7 @@ export function autoRepairLd(s: Settings, services: Service[], origin: string) {
     telephone: s.phoneE164,
     ...(s.email ? { email: s.email } : {}),
     priceRange: s.priceRange,
+    areaServed: areaServed(s),
     address: {
       '@type': 'PostalAddress',
       streetAddress: s.street,
@@ -59,7 +75,7 @@ export function autoRepairLd(s: Settings, services: Service[], origin: string) {
         '@type': 'Offer',
         url: `${origin}/${x.slug}/`,
         itemOffered: { '@type': 'Service', name: x.title, description: x.summary },
-        priceSpecification: { '@type': 'PriceSpecification', minPrice: x.price_from, priceCurrency: 'UAH' },
+        ...(x.price_from > 0 ? { priceSpecification: { '@type': 'PriceSpecification', minPrice: x.price_from, priceCurrency: 'UAH' } } : {}),
       })),
     },
   };

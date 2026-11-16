@@ -1,0 +1,24 @@
+name: Keep Supabase awake
+
+# Безкоштовний проєкт Supabase засинає після тижня без запитів.
+# Раз на добу відкриваємо сторінки, які читають базу (налаштування, послуги, слоти),
+# тож вона отримує select-запити навіть без відвідувачів.
+# Увага: GitHub вимикає розклад, якщо в репозиторії 60 днів не було комітів;
+# тоді увімкніть його знову в Actions → Keep Supabase awake → Enable workflow.
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # щодня о 06:17 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Запити до сторінок, що читають базу
+        run: |
+          for path in sitemap.xml api/slots; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 "https://stotesel.com.ua/$path?keepalive=$(date +%s)")
+            echo "$path → $code"
+            [ "$code" -lt 500 ] || exit 1
+          done

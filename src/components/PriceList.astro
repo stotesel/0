@@ -1,7 +1,7 @@
 ---
 // Прайс з макета: фільтр за типом авто, на телефоні перші 6 позицій + кнопка.
 import type { Service } from '../lib/types';
-import { price } from '../lib/site';
+import { PRICE_ON_REQUEST, price } from '../lib/site';
 interface Props { services: Service[]; foot?: string; collapsed?: boolean }
 const { services, foot = '', collapsed = true } = Astro.props;
 const KIND: Record<string, string> = { ev: 'EV', hyb: 'гібрид', ice: 'ДВЗ' };
@@ -17,7 +17,7 @@ const KIND: Record<string, string> = { ev: 'EV', hyb: 'гібрид', ice: 'ДВ
     <div class:list={['row', { extra: collapsed && i >= 6 }]} data-k={s.kind}>
       <h3><a href={`/${s.slug}/`}>{s.title}</a>{s.kind !== 'all' && <span class="kind">{KIND[s.kind]}</span>}</h3>
       <p>{s.summary}</p>
-      <div class="cost"><small>від</small>{price(s.price_from)} грн</div>
+      <div class="cost">{s.price_from > 0 ? <><small>від</small>{price(s.price_from)} грн</> : <small>{PRICE_ON_REQUEST}</small>}</div>
       <div class="time">{s.duration}</div>
     </div>
   ))}

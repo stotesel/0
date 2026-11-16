@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { autoRepairLd, breadcrumbLd, loadSite, price } from '../lib/site';
+import { PRICE_ON_REQUEST, autoRepairLd, breadcrumbLd, loadSite, price } from '../lib/site';
 
 const { settings, services, nextFree } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
@@ -22,7 +22,7 @@ const description = `Усі послуги ${settings.name}: ТО, діагно�
           {s.kind !== 'all' && <span class="tag">{KIND[s.kind]}</span>}
           <h3>{s.title}</h3>
           <p>{s.summary}</p>
-          <div class="meta"><span class="cost"><small>від</small>{price(s.price_from)} грн</span><span>{s.duration}</span></div>
+          <div class="meta"><span class="cost">{s.price_from > 0 ? <><small>від</small>{price(s.price_from)} грн</> : <small>{PRICE_ON_REQUEST}</small>}</span><span>{s.duration}</span></div>
         </a>
       ))}
     </div>

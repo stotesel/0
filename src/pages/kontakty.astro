@@ -2,12 +2,15 @@
 import { marked } from 'marked';
 import Base from '../layouts/Base.astro';
 import Contacts from '../components/Contacts.astro';
-import { addressLine, autoRepairLd, breadcrumbLd, loadSite } from '../lib/site';
+import { addressLine, autoRepairLd, breadcrumbLd, districtList, loadSite } from '../lib/site';
 
 const { settings, services, nextFree } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
-const title = `Контакти ${settings.name}: адреса, телефон, маршрут`;
-const description = `${settings.name}: ${addressLine(settings)}. ${settings.hoursText}. Телефон ${settings.phone}. Маршрут у Google Maps і Waze.`;
+// «Нивки, Виноградар» → «біля Нивок і Виноградаря» не відмінюємо автоматично, тому пишемо через тире
+const d = districtList(settings);
+const near = d.length ? ` — ${d.join(', ')}` : '';
+const title = `Контакти ${settings.name}: автосервіс і шиномонтаж${near}`;
+const description = `${settings.name}: ${addressLine(settings)}${d.length ? ` (${d.join(', ')})` : ''}. ${settings.hoursText}. Телефон ${settings.phone}. Маршрут у Google Maps і Waze.`;
 const directions = settings.directions?.trim() ? (marked.parse(settings.directions) as string) : '';
 ---
 <Base settings={settings} title={title} description={description} nextFree={nextFree}

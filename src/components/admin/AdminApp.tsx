@@ -131,7 +131,7 @@ const KINDS: [string, string][] = [['all', 'Усі авто'], ['ice', 'Бенз
 const SERVICE_FIELDS: Field[] = [
   { key: 'title', label: 'Назва' },
   { key: 'slug', label: 'Адреса сторінки', hint: 'Латиницею, напр. zamina-masla. Сторінка відкриється за адресою /zamina-masla/' },
-  { key: 'price_from', label: 'Ціна від, грн', type: 'number' },
+  { key: 'price_from', label: 'Ціна від, грн (0 = «за запитом»)', type: 'number' },
   { key: 'duration', label: 'Тривалість' },
   { key: 'kind', label: 'Тип авто', type: 'select', options: KINDS },
   { key: 'sort', label: 'Порядок у списку', type: 'number' },
@@ -175,6 +175,7 @@ const SETTINGS_FIELDS: Field[] = [
   { key: 'footerText', label: 'Текст у підвалі', type: 'area' },
   { key: 'ga4Id', label: 'Google Analytics 4: Measurement ID', hint: 'Вигляд G-XXXXXXXXXX (GA4 → Адміністратор → Потоки даних). Порожнє поле вимикає аналітику.' },
   { key: 'googleVerification', label: 'Google Search Console: код підтвердження', hint: 'Потрібен лише для ресурсу «Префікс URL» з HTML-тегом. Вставте весь тег або значення content.' },
+  { key: 'districts', label: 'Райони поруч (через кому)', hint: 'Напр. Нивки, Виноградар. Ідуть у розмітку для Google і SEO-тексти.' },
   { key: 'directions', label: 'Як доїхати (сторінка Контакти, Markdown)', type: 'area' },
   { key: 'seoTitle', label: 'SEO-заголовок головної' },
   { key: 'seoDescription', label: 'SEO-опис головної', type: 'area' },

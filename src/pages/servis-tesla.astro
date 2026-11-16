@@ -3,7 +3,7 @@
 import { marked } from 'marked';
 import Base from '../layouts/Base.astro';
 import Booking from '../components/blocks/Booking.astro';
-import { breadcrumbLd, faqLd, loadSite, price, tel } from '../lib/site';
+import { PRICE_ON_REQUEST, areaServed, breadcrumbLd, faqLd, loadSite, price, tel } from '../lib/site';
 
 const { settings, blocks, services, nextFree } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
@@ -13,7 +13,7 @@ const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
 // Послуги, які найчастіше потрібні власникам Tesla: усі EV-послуги + загальні вузли
 const extra = ['kompiuterna-diahnostyka', 'remont-khodovoi', 'halmivna-systema', 'rozval-skhodzhennia'];
 const related = services.filter((s) => s.kind === 'ev' || extra.includes(s.slug));
-const minPrice = related.length ? Math.min(...related.map((s) => s.price_from)) : 0;
+const minPrice = related.length ? Math.min(...related.map((s) => s.price_from).filter((n) => n > 0)) : 0;
 
 const title = `Сервіс і ремонт Tesla у ${city} — Model S, 3, X, Y | ${settings.name}`;
 const description = `Ремонт і обслуговування Tesla Model S, 3, X та Y у ${city}: діагностика батареї, охолодження, тепловий насос, зарядка, ходова й гальма. Робота з високою напругою. Запис: ${settings.phone}.`;
@@ -70,7 +70,7 @@ const serviceLd = {
   name: 'Сервіс і ремонт Tesla',
   serviceType: 'Ремонт і обслуговування електромобілів Tesla',
   description,
-  areaServed: settings.city,
+  areaServed: areaServed(settings),
   provider: { '@id': `${origin}/#autorepair` },
   ...(minPrice ? { offers: { '@type': 'Offer', priceCurrency: 'UAH', priceSpecification: { '@type': 'PriceSpecification', minPrice, priceCurrency: 'UAH' } } } : {}),
 };
@@ -106,7 +106,7 @@ const serviceLd = {
             {s.kind === 'ev' && <span class="tag">EV</span>}
             <h3>{s.title}</h3>
             <p>{s.summary}</p>
-            <div class="meta"><span class="cost"><small>від</small>{price(s.price_from)} грн</span><span>{s.duration}</span></div>
+            <div class="meta"><span class="cost">{s.price_from > 0 ? <><small>від</small>{price(s.price_from)} грн</> : <small>{PRICE_ON_REQUEST}</small>}</span><span>{s.duration}</span></div>
           </a>
         ))}
       </div>
