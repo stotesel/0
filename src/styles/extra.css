@@ -59,6 +59,9 @@ a.card-i:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(16,32,48,.
 .banner{background:var(--hv);color:#fff;border-radius:var(--r-lg);padding:40px;display:flex;flex-wrap:wrap;gap:20px 40px;align-items:center;justify-content:space-between}
 .banner h2{font:700 clamp(26px,3vw,40px)/1.08 var(--display);letter-spacing:-.03em}
 .banner p{margin-top:10px;color:#FFF3EB;max-width:52ch}
+.banner-sm{padding:24px 28px;gap:16px 32px;background:var(--ink)}
+.banner-sm h2{font-size:clamp(20px,2vw,26px)}
+.banner-sm p{margin-top:6px;font-size:16px;max-width:60ch;color:#B6C3CF}
 .text-block{max-width:780px}
 .text-block h2{font:700 clamp(28px,3.4vw,44px)/1.06 var(--display);letter-spacing:-.035em}
 

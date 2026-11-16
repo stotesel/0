@@ -103,9 +103,9 @@ const brands = block.type === 'brands' ? [...(d.items ?? []), ...(d.items ?? [])
 {block.type === 'banner' && (
   <section id={`b-${block.id}`} style={pad}>
     <div class="wrap">
-      <div class="banner">
-        <div><h2>{d.title}</h2><p>{d.text}</p></div>
-        {d.button && <a class="btn btn-ink" href={d.link || '/#book'}>{d.button}</a>}
+      <div class:list={['banner', { 'banner-sm': d.compact }]}>
+        <div><h2>{d.title}</h2>{d.text && <p>{d.text}</p>}</div>
+        {d.button && <a class:list={['btn', d.compact ? 'btn-hv' : 'btn-ink']} href={d.link || '/#book'}>{d.button}</a>}
       </div>
     </div>
   </section>
