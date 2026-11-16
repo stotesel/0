@@ -10,5 +10,6 @@ export default defineConfig({
   adapter: cloudflare({ imageService: 'passthrough' }),
   session: false,
   integrations: [react()],
-  vite: { plugins: [tailwindcss()] },
+  // Дата збірки йде в <lastmod> sitemap: код і стартові тексти змінюються лише з деплоєм
+  vite: { plugins: [tailwindcss()], define: { __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)) } },
 });

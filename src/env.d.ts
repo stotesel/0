@@ -1,5 +1,7 @@
 /// <reference types="astro/client" />
 
+declare const __BUILD_DATE__: string;
+
 declare module 'cloudflare:workers' {
   interface KVLike {
     get(key: string, type: 'json'): Promise<unknown>;

@@ -174,6 +174,8 @@ const SETTINGS_FIELDS: Field[] = [
   { key: 'whatsapp', label: 'WhatsApp (номер)' },
   { key: 'footerText', label: 'Текст у підвалі', type: 'area' },
   { key: 'ga4Id', label: 'Google Analytics 4: Measurement ID', hint: 'Вигляд G-XXXXXXXXXX (GA4 → Адміністратор → Потоки даних). Порожнє поле вимикає аналітику.' },
+  { key: 'googleVerification', label: 'Google Search Console: код підтвердження', hint: 'Потрібен лише для ресурсу «Префікс URL» з HTML-тегом. Вставте весь тег або значення content.' },
+  { key: 'directions', label: 'Як доїхати (сторінка Контакти, Markdown)', type: 'area' },
   { key: 'seoTitle', label: 'SEO-заголовок головної' },
   { key: 'seoDescription', label: 'SEO-опис головної', type: 'area' },
 ];

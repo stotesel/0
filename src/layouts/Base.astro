@@ -19,6 +19,8 @@ const canonical = `${origin}${path}`;
 const [brandA, brandB] = [settings.name.slice(0, 3), settings.name.slice(3)];
 // GA4 вмикається лише для коректного Measurement ID з налаштувань
 const ga = /^G-[A-Z0-9]{6,14}$/.test(settings.ga4Id.trim()) ? settings.ga4Id.trim() : '';
+// Приймаємо і весь тег <meta name="google-site-verification" content="…">, і лише значення
+const gsv = (settings.googleVerification || '').trim().replace(/^.*content=["']([^"']+)["'].*$/s, '$1').replace(/[^\w-]/g, '');
 const nav = [
   ['/#services', 'Послуги і ціни'],
   ['/zapchastyny/', 'Запчастини'],
@@ -37,6 +39,7 @@ const nav = [
 <meta name="description" content={description}>
 <link rel="canonical" href={canonical}>
 {noindex && <meta name="robots" content="noindex, nofollow">}
+{gsv && <meta name="google-site-verification" content={gsv}>}
 <meta property="og:type" content="website">
 <meta property="og:locale" content="uk_UA">
 <meta property="og:site_name" content={settings.name}>

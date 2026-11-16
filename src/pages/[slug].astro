@@ -4,6 +4,7 @@ import { marked } from 'marked';
 import Base from '../layouts/Base.astro';
 import Booking from '../components/blocks/Booking.astro';
 import { breadcrumbLd, loadSite, price, tel } from '../lib/site';
+import { serviceTexts } from '../lib/serviceTexts';
 
 const { settings, blocks, services, nextFree } = await loadSite();
 const s = services.find((x) => x.slug === Astro.params.slug);
@@ -12,7 +13,9 @@ if (!s) return Astro.rewrite('/404');
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const city = settings.city === 'Київ' ? 'Києві' : settings.city;
 const title = s.seo_title || `${s.title} у ${city} — від ${price(s.price_from)} грн | ${settings.name}`;
-const description = s.seo_description || `${s.title} в автосервісі ${settings.name}: ${s.summary.toLowerCase()}. Від ${price(s.price_from)} грн, ${s.duration}. Запис онлайн або за телефоном ${settings.phone}.`;
+const body = s.body?.trim() || serviceTexts[s.slug] || '';
+const lcFirst = (t: string) => (/^[A-ZА-ЯІЇЄҐ]{2}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
+const description = s.seo_description || `${s.title} в автосервісі ${settings.name}: ${lcFirst(s.summary)}. Від ${price(s.price_from)} грн, ${s.duration}. Запис онлайн або за телефоном ${settings.phone}.`;
 const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
 const serviceLd = {
   '@context': 'https://schema.org',
@@ -39,7 +42,7 @@ const serviceLd = {
           <ul>{s.includes.map((x) => <li>{x}</li>)}</ul>
         </>
       )}
-      {s.body && <div class="prose" set:html={marked.parse(s.body)} />}
+      {body && <div class="prose" set:html={marked.parse(body)} />}
     </div>
     <aside class="svc-side">
       <div><div class="k">Вартість роботи</div><div class="v"><small>від</small>{price(s.price_from)} грн</div></div>
