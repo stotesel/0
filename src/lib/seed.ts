@@ -11,7 +11,7 @@ export const seedSettings: Settings = {
   email: '',
   street: 'вул. Івана Виговського, 9',
   city: 'Київ',
-  postalCode: '02000',
+  postalCode: '04136',
   lat: '50.49108148367107',
   lng: '30.400215617160832',
   hoursText: 'Пн–Сб, 9:00–19:00',
