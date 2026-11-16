@@ -22,6 +22,7 @@ const ga = /^G-[A-Z0-9]{6,14}$/.test(settings.ga4Id.trim()) ? settings.ga4Id.tri
 // Приймаємо і весь тег <meta name="google-site-verification" content="…">, і лише значення
 const gsv = (settings.googleVerification || '').trim().replace(/^.*content=["']([^"']+)["'].*$/s, '$1').replace(/[^\w-]/g, '');
 const nav = [
+  ['/servis-tesla/', 'Сервіс Tesla'],
   ['/#services', 'Послуги і ціни'],
   ['/zapchastyny/', 'Запчастини'],
   ['/#process', 'Як ми працюємо'],
@@ -81,6 +82,7 @@ const nav = [
     <a href="/" class="logo"><span>{brandA}<b>{brandB}</b></span></a>
     <span>{settings.footerText}</span>
     <nav class="foot-nav" aria-label="Сторінки сайту">
+      <a href="/servis-tesla/">Сервіс Tesla</a>
       <a href="/poslugy/">Послуги</a>
       <a href="/tsiny/">Ціни</a>
       <a href="/zapchastyny/">Запчастини</a>
