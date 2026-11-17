@@ -2,10 +2,11 @@
 //  - Supabase (PostgREST через fetch із service role ключем, тільки на сервері);
 //  - демо на Cloudflare KV, коли змінні Supabase не задані.
 import { env } from 'cloudflare:workers';
-import { seedBlocks, seedParts, seedPrivacy, seedSchedule, seedServices, seedSettings } from './seed';
-import type { Block, Booking, Part, Schedule, Service, SiteContent } from './types';
+import { seedAbout, seedBlocks, seedParts, seedPrivacy, seedSchedule, seedServices, seedSettings } from './seed';
+import { seedReviews } from './seedReviews';
+import type { Block, Booking, Part, Review, Schedule, Service, SiteContent } from './types';
 
-export type ContentKey = 'settings' | 'blocks' | 'schedule' | 'privacy';
+export type ContentKey = 'settings' | 'blocks' | 'schedule' | 'privacy' | 'about' | 'reviews' | 'photos';
 export type Table = 'services' | 'parts';
 type Row = { id: string; enabled: boolean; sort: number };
 
@@ -20,6 +21,9 @@ const seeds: Record<Table, Row[]> = { services: seedServices, parts: seedParts }
 function withDefaults(c: Partial<SiteContent>): SiteContent {
   return {
     privacy: typeof c.privacy === 'string' && c.privacy.trim() ? c.privacy : seedPrivacy,
+    about: typeof c.about === 'string' && c.about.trim() ? c.about : seedAbout,
+    reviews: Array.isArray(c.reviews) ? c.reviews : seedReviews,
+    photos: c.photos && typeof c.photos === 'object' ? c.photos : {},
     settings: { ...seedSettings, ...(c.settings ?? {}) },
     blocks: (c.blocks as Block[]) ?? seedBlocks,
     schedule: { ...seedSchedule, ...(c.schedule ?? {}) } as Schedule,
@@ -97,6 +101,34 @@ export async function saveContent(key: ContentKey, value: unknown) {
   const db = await demoRead();
   (db.content as any)[key] = value;
   await demoWrite(db);
+}
+
+/** Відгук із сайту: потрапляє в список зі статусом «на перевірці». */
+export async function addPendingReview(r: Pick<Review, 'author' | 'car' | 'text' | 'rating'>) {
+  const { reviews } = await getContent();
+  // Захист від флуду: не більше 30 відгуків, що чекають перевірки
+  if (reviews.filter((x) => x.status === 'pending').length >= 30) throw new Error('queue');
+  const now = new Date().toISOString();
+  const row: Review = { ...r, id: crypto.randomUUID(), date: now.slice(0, 10), source: 'site', status: 'pending', created_at: now };
+  await saveContent('reviews', [row, ...reviews]);
+  return row;
+}
+
+/** Завантаження фото в Supabase Storage (бакет media). У демо-режимі повертає data URL. */
+export async function uploadImage(name: string, bytes: ArrayBuffer, type: string): Promise<string> {
+  if (mode() !== 'supabase') {
+    let bin = '';
+    new Uint8Array(bytes).forEach((b) => (bin += String.fromCharCode(b)));
+    return `data:${type};base64,${btoa(bin)}`;
+  }
+  const key = env.SUPABASE_SERVICE_ROLE_KEY!;
+  const res = await fetch(`${env.SUPABASE_URL}/storage/v1/object/media/${name}`, {
+    method: 'POST',
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': type, 'x-upsert': 'true', 'cache-control': '31536000' },
+    body: bytes,
+  });
+  if (!res.ok) throw new Error(`Storage ${res.status}: ${await res.text()}`);
+  return `${env.SUPABASE_URL}/storage/v1/object/public/media/${name}`;
 }
 
 /* ---------------- Послуги та запчастини ---------------- */

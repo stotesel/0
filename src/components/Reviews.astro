@@ -1,0 +1,96 @@
+---
+// Підтверджені відгуки + форма для нового. Нові відгуки з'являються після перевірки в адмінці.
+import { env } from 'cloudflare:workers';
+import type { Review } from '../lib/types';
+import { MAPS_REVIEWS_URL, reviewDate } from '../lib/reviews';
+
+interface Props {
+  reviews: Review[];
+  title?: string;
+  text?: string;
+  limit?: number;
+  form?: boolean;
+  more?: boolean;
+  id?: string;
+  tight?: boolean;
+}
+const { reviews, title = 'Відгуки клієнтів', text = '', limit = 0, form = false, more = false, id = 'reviews', tight = false } = Astro.props;
+const list = limit ? reviews.slice(0, limit) : reviews;
+const turnstileKey = env.TURNSTILE_SITE_KEY ?? '';
+---
+<section id={id} style={tight ? 'padding-top:24px' : undefined}>
+  <div class="wrap">
+    <div class="sec-head"><h2>{title}</h2>{text && <p>{text}</p>}</div>
+    <div class="cards rv-list">
+      {list.map((r) => (
+        <figure class="card-i rv">
+          <div class="rv-top">
+            <span class="rv-stars" aria-label={`Оцінка ${r.rating} з 5`}>{'★'.repeat(r.rating)}<span>{'★'.repeat(5 - r.rating)}</span></span>
+            <span class="rv-date">{reviewDate(r.date)}</span>
+          </div>
+          <blockquote><p>{r.text}</p></blockquote>
+          <figcaption class="meta">
+            <b>{r.author}</b>
+            <span class="rv-src">{r.car && <span class="tag">{r.car}</span>}{r.source === 'google' && <span class="rv-g">Google</span>}</span>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+    <div class="rv-actions">
+      {more && <a class="btn btn-ink" href="/vidguky/">Усі відгуки</a>}
+      <a class="btn btn-ghost" href={MAPS_REVIEWS_URL} target="_blank" rel="noopener">Відгуки в Google Картах</a>
+    </div>
+
+    {form && (
+      <form class="card rv-form" id="reviewForm" novalidate>
+        <h3>Залишити відгук</h3>
+        <p class="rv-note">Відгук з’явиться на сайті після перевірки. Номер телефону не потрібен.</p>
+        <div class="field">
+          <span class="lbl" id="l-rate">Оцінка</span>
+          <div class="chips rv-rate" role="radiogroup" aria-labelledby="l-rate">
+            {[5, 4, 3, 2, 1].map((n) => (
+              <><input type="radio" name="rating" id={`rt${n}`} value={n} checked={n === 5}><label for={`rt${n}`}>{'★'.repeat(n)}</label></>
+            ))}
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="rv-author">Ваше ім’я</label><input type="text" id="rv-author" name="author" maxlength="60" required autocomplete="given-name"></div>
+          <div class="field"><label for="rv-car">Авто і що робили (необов’язково)</label><input type="text" id="rv-car" name="car" maxlength="80" placeholder="Tesla Model 3, важелі"></div>
+        </div>
+        <div class="field"><label for="rv-text">Відгук</label><textarea id="rv-text" name="text" rows="4" maxlength="1500" required></textarea></div>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+        {turnstileKey && <div class="cf-turnstile" data-sitekey={turnstileKey} style="margin-bottom:16px"></div>}
+        <p class="rv-msg" role="status"></p>
+        <button class="btn btn-hv" type="submit">Надіслати відгук</button>
+      </form>
+    )}
+  </div>
+</section>
+{form && turnstileKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+{form && (
+  <script is:inline>
+    (() => {
+      const f = document.getElementById('reviewForm');
+      if (!f) return;
+      const msg = f.querySelector('.rv-msg');
+      f.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const d = new FormData(f);
+        const btn = f.querySelector('button[type=submit]');
+        btn.disabled = true; msg.textContent = 'Надсилаємо…'; msg.className = 'rv-msg';
+        try {
+          const r = await fetch('/api/review', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author: d.get('author'), car: d.get('car'), text: d.get('text'), rating: d.get('rating'), website: d.get('website'), turnstile: d.get('cf-turnstile-response') }),
+          });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.error || 'Не вдалося надіслати відгук.');
+          f.innerHTML = '<h3>Дякуємо за відгук!</h3><p class="rv-note">Він з’явиться на сайті після перевірки.</p>';
+        } catch (err) {
+          msg.textContent = err.message; msg.className = 'rv-msg bad';
+          window.turnstile?.reset?.();
+        } finally { btn.disabled = false; }
+      });
+    })();
+  </script>
+)}

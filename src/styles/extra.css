@@ -163,3 +163,26 @@ button[disabled]{opacity:.6;cursor:progress}
 .legal li::before{display:none}
 .legal h2{font:600 20px/1.3 var(--display);letter-spacing:-.01em;margin-top:30px}
 .foot-nav a[href*="polityka"]{opacity:.85}
+
+/* ---------- Фото з адмінки (1:1) і заглушки ---------- */
+.ph{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--r-md);background:#fff}
+.ph-empty{border:1.5px solid var(--line)}
+.ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+
+/* ---------- Відгуки ---------- */
+.rv blockquote p{color:var(--ink);font-size:16px;white-space:pre-line}
+.rv-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.rv-stars{color:var(--hv);letter-spacing:2px;font-size:16px}
+.rv-stars span{color:var(--line)}
+.rv-date{font-size:13px;color:var(--ink-soft)}
+.rv .meta{align-items:center;flex-wrap:wrap}
+.rv-src{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rv-g{font-size:12px;font-weight:600;color:var(--ink-soft)}
+.rv-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.rv-form{margin-top:32px;max-width:760px;background:var(--chalk);border-radius:var(--r-lg);padding:32px}
+.rv-form h3{font:600 22px/1.25 var(--display);letter-spacing:-.02em}
+.rv-note{color:var(--ink-soft);font-size:15px;margin:6px 0 20px}
+.rv-rate label{color:var(--hv);letter-spacing:1px}
+.rv-msg{min-height:1.4em;margin-bottom:12px;font-size:15px}
+.rv-msg.bad{color:#C0341D}
+@media (max-width:600px){.rv-form{padding:22px}}

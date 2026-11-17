@@ -5,10 +5,11 @@ import Hero from './blocks/Hero.astro';
 import Booking from './blocks/Booking.astro';
 import Contacts from './Contacts.astro';
 import PriceList from './PriceList.astro';
-import type { Block, Service, Settings } from '../lib/types';
+import Reviews from './Reviews.astro';
+import type { Block, Review, Service, Settings } from '../lib/types';
 
-interface Props { block: Block; settings: Settings; services: Service[]; tight: boolean }
-const { block, settings, services, tight } = Astro.props;
+interface Props { block: Block; settings: Settings; services: Service[]; tight: boolean; reviews?: Review[] }
+const { block, settings, services, tight, reviews = [] } = Astro.props;
 const d = block.data;
 const pad = tight ? 'padding-top:24px' : undefined;
 const whyIcons = [
@@ -84,20 +85,8 @@ const brands = block.type === 'brands' ? [...(d.items ?? []), ...(d.items ?? [])
 
 {block.type === 'contacts' && <Contacts title={d.title} settings={settings} tight={tight} />}
 
-{block.type === 'reviews' && (
-  <section id={`b-${block.id}`} style={pad}>
-    <div class="wrap">
-      <div class="sec-head"><h2>{d.title}</h2><p>{d.text}</p></div>
-      <div class="cards">
-        {(d.items ?? []).map((r: any) => (
-          <figure class="card-i">
-            <blockquote><p>{r.text}</p></blockquote>
-            <figcaption class="meta"><b>{r.title}</b><span class="tag wait">{r.car}</span></figcaption>
-          </figure>
-        ))}
-      </div>
-    </div>
-  </section>
+{block.type === 'reviews' && reviews.length > 0 && (
+  <Reviews reviews={reviews} title={d.title} text={d.text} limit={6} more id={`b-${block.id}`} tight={tight} />
 )}
 
 {block.type === 'banner' && (

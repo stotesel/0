@@ -1,11 +1,16 @@
 ---
 // Посадкова сторінка під запити «сервіс Tesla Київ», «ремонт Tesla», «СТО Tesla».
 import { marked } from 'marked';
-import Base from '../layouts/Base.astro';
-import Booking from '../components/blocks/Booking.astro';
-import { PRICE_ON_REQUEST, areaServed, districtPhrase, breadcrumbLd, faqLd, loadSite, price, tel } from '../lib/site';
+import Base from '../../layouts/Base.astro';
+import Booking from '../../components/blocks/Booking.astro';
+import Reviews from '../../components/Reviews.astro';
+import { TESLA_MODELS } from '../../lib/teslaModels';
+import { ARTICLES } from '../../lib/articles';
+import { teslaReviews } from '../../lib/reviews';
+import { PRICE_ON_REQUEST, areaServed, districtPhrase, breadcrumbLd, faqLd, loadSite, price, tel } from '../../lib/site';
 
-const { settings, blocks, services, nextFree } = await loadSite();
+const { settings, blocks, services, nextFree, reviews } = await loadSite();
+const tReviews = teslaReviews(reviews);
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const city = settings.city === 'Київ' ? 'Києві' : settings.city;
 const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
@@ -133,6 +138,22 @@ const serviceLd = {
       </div>
     </div></div>
   )}
+
+  <div class="page-body"><div class="wrap">
+    <h2 class="svc-related">Ремонт за моделями</h2>
+    <div class="cards">
+      {TESLA_MODELS.map((m) => <a class="card-i" href={`/servis-tesla/${m.slug}/`}><h3>Tesla {m.name}</h3><p>{m.lead}</p><div class="meta"><span>{m.years}</span><span>Детальніше →</span></div></a>)}
+    </div>
+  </div></div>
+
+  {tReviews.length > 0 && <Reviews reviews={tReviews} title="Відгуки власників Tesla" limit={3} more tight />}
+
+  <div class="page-body"><div class="wrap">
+    <h2 class="svc-related">Статті для власників Tesla</h2>
+    <div class="cards">
+      {ARTICLES.map((a) => <a class="card-i" href={`/statti/${a.slug}/`}><h3>{a.title}</h3><p>{a.lead}</p></a>)}
+    </div>
+  </div></div>
 
   <section id="faq">
     <div class="wrap faq">

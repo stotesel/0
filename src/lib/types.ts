@@ -83,8 +83,27 @@ export interface Booking {
   created_at: string;
 }
 
+export type ReviewStatus = 'pending' | 'approved' | 'hidden';
+export interface Review {
+  id: string;
+  author: string;
+  car: string; // авто й робота, напр. «Tesla Model X, рульова рейка»
+  text: string;
+  rating: number; // 1–5
+  date: string; // YYYY-MM-DD
+  source: 'google' | 'site';
+  status: ReviewStatus; // нові з сайту чекають підтвердження в адмінці
+  created_at: string;
+}
+
+/** Фото, завантажені через адмінку: ключ — ідентифікатор місця на сайті. */
+export type Photos = Record<string, { url: string; alt: string }>;
+
 export interface SiteContent {
   privacy: string; // Markdown політики конфіденційності
+  about: string; // Markdown сторінки «Про нас»
+  reviews: Review[];
+  photos: Photos;
   settings: Settings;
   blocks: Block[];
   schedule: Schedule;

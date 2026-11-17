@@ -1,0 +1,48 @@
+---
+import { marked } from 'marked';
+import Base from '../layouts/Base.astro';
+import Photo from '../components/Photo.astro';
+import Reviews from '../components/Reviews.astro';
+import Booking from '../components/blocks/Booking.astro';
+import { breadcrumbLd, districtPhrase, loadSite, tel } from '../lib/site';
+import { approved } from '../lib/reviews';
+import { PHOTO_SLOTS } from '../lib/photos';
+
+const { settings, blocks, services, nextFree, photos, about, reviews } = await loadSite();
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const near = districtPhrase(settings);
+const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
+const list = approved(reviews);
+const avg = list.length ? (list.reduce((s, r) => s + r.rating, 0) / list.length).toFixed(1).replace('.', ',') : '';
+const slots = PHOTO_SLOTS.filter((s) => s.page === '/pro-nas/');
+const title = `Про ${settings.name}: автосервіс і сервіс Tesla${near ? ` між ${near}` : ''}`;
+const description = `${settings.name} — автосервіс у Києві: Tesla, електромобілі, гібриди, бензин і дизель. Як ми працюємо, фото сервісу, відгуки. ${settings.street}.`;
+---
+<Base settings={settings} title={title} description={description} nextFree={nextFree}
+  jsonLd={[breadcrumbLd(origin, [['Головна', '/'], ['Про нас', '/pro-nas/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Про нас</span></nav>
+    <h1>Про {settings.name}</h1>
+    <p class="lead">Автосервіс у Києві{near ? ` між ${near}` : ''}. Tesla та інші електромобілі, гібриди, бензин і дизель.{avg && ` ${avg} з 5 у відгуках клієнтів.`}</p>
+  </div></div>
+
+  <div class="page-body"><div class="wrap">
+    <div class="ph-grid">
+      {slots.map((s, i) => <Photo photos={photos} slot={s.id} alt={`${settings.name}: ${s.label.toLowerCase()}`} eager={i < 2} />)}
+    </div>
+  </div></div>
+
+  <div class="page-body"><div class="wrap svc">
+    <div class="svc-card"><div class="prose" style="margin-top:0" set:html={marked.parse(about)} /></div>
+    <aside class="svc-side">
+      <div><div class="k">Адреса</div><div class="v" style="font-size:22px">{settings.street}</div></div>
+      <div><div class="k">Графік</div><div>{settings.hoursText}</div></div>
+      <a class="btn btn-hv" href="#book">Записатися</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href="/kontakty/">Як доїхати</a>
+    </aside>
+  </div></div>
+
+  {list.length > 0 && <Reviews reviews={list} title="Що пишуть клієнти" limit={6} more tight />}
+  <Booking data={booking} settings={settings} services={services} tight />
+</Base>

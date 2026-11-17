@@ -2,8 +2,10 @@
 import Base from '../layouts/Base.astro';
 import Block from '../components/Block.astro';
 import { autoRepairLd, faqLd, loadSite } from '../lib/site';
+import { approved } from '../lib/reviews';
 
-const { settings, blocks, services, nextFree } = await loadSite();
+const { settings, blocks, services, nextFree, reviews } = await loadSite();
+const shown = approved(reviews);
 const visible = blocks.filter((b) => b.enabled);
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const faq = visible.find((b) => b.type === 'faq');
@@ -13,5 +15,5 @@ if (faq?.data.items?.length) jsonLd.push(faqLd(faq.data.items));
 const firstFull = visible.findIndex((b) => !['hero', 'brands'].includes(b.type));
 ---
 <Base settings={settings} title={settings.seoTitle} description={settings.seoDescription} nextFree={nextFree} jsonLd={jsonLd}>
-  {visible.map((block, i) => <Block block={block} settings={settings} services={services} tight={i > firstFull} />)}
+  {visible.map((block, i) => <Block block={block} settings={settings} services={services} reviews={shown} tight={i > firstFull} />)}
 </Base>

@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import Photo from '../../components/Photo.astro';
+import { breadcrumbLd, loadSite } from '../../lib/site';
+import { ARTICLES } from '../../lib/articles';
+import { reviewDate } from '../../lib/reviews';
+
+const { settings, nextFree, photos } = await loadSite();
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const title = `Статті про ремонт і обслуговування Tesla | ${settings.name}`;
+const description = 'Корисні статті для власників Tesla: перевірка батареї, ходова, тепловий насос, гальма, зарядка авто зі США в Україні.';
+---
+<Base settings={settings} title={title} description={description} nextFree={nextFree}
+  jsonLd={[breadcrumbLd(origin, [['Головна', '/'], ['Статті', '/statti/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Статті</span></nav>
+    <h1>Статті для власників Tesla</h1>
+    <p class="lead">Пояснюємо типові проблеми простими словами: що ламається, чому і як не переплатити за ремонт.</p>
+  </div></div>
+  <div class="page-body"><div class="wrap">
+    <div class="cards">
+      {ARTICLES.map((a) => (
+        <a class="card-i" href={`/statti/${a.slug}/`}>
+          <Photo photos={photos} slot={`article-${a.slug}`} alt={a.title} />
+          <h3>{a.title}</h3>
+          <p>{a.lead}</p>
+          <div class="meta"><span>{reviewDate(a.date)}</span><span>Читати →</span></div>
+        </a>
+      ))}
+    </div>
+  </div></div>
+</Base>

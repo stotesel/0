@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Block, Booking, DaySlots, Part, Schedule, Service, Settings } from '../../lib/types';
+import type { Block, Booking, DaySlots, Part, Photos, Review, Schedule, Service, Settings } from '../../lib/types';
 
 interface Data {
   mode: 'supabase' | 'demo';
   settings: Settings;
   blocks: Block[];
   privacy: string;
+  about: string;
+  reviews: Review[];
+  photos: Photos;
+  photoSlots: { id: string; label: string; page: string }[];
   schedule: Schedule;
   services: Service[];
   parts: Part[];
@@ -237,7 +241,7 @@ function Rows<T extends { id: string; title: string; enabled: boolean; sort: num
 }
 
 /* ---------- Застосунок ---------- */
-const TABS = [['bookings', 'Заявки'], ['schedule', 'Розклад'], ['services', 'Послуги і ціни'], ['parts', 'Запчастини'], ['blocks', 'Головна сторінка'], ['settings', 'Налаштування']] as const;
+const TABS = [['bookings', 'Заявки'], ['schedule', 'Розклад'], ['reviews', 'Відгуки'], ['services', 'Послуги і ціни'], ['parts', 'Запчастини'], ['blocks', 'Головна сторінка'], ['photos', 'Фото'], ['settings', 'Налаштування']] as const;
 type Tab = (typeof TABS)[number][0];
 
 export default function AdminApp() {
@@ -249,10 +253,11 @@ export default function AdminApp() {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [privacy, setPrivacy] = useState('');
+  const [about, setAbout] = useState('');
   const [open, setOpen] = useState('');
   const [allBookings, setAllBookings] = useState(false);
 
-  function apply(d: Data) { setData(d); setBlocks(d.blocks); setSettings(d.settings); setPrivacy(d.privacy); }
+  function apply(d: Data) { setData(d); setBlocks(d.blocks); setSettings(d.settings); setPrivacy(d.privacy); setAbout(d.about); }
   async function load() {
     const r = await fetch('/api/admin/data');
     if (r.status === 401) return setAuth('no');
@@ -280,6 +285,7 @@ export default function AdminApp() {
   const today = data.days[0]?.date ?? '';
   const shown = data.bookings.filter((b) => allBookings || (b.date >= today && b.status !== 'cancelled'));
   const newCount = data.bookings.filter((b) => b.status === 'new' && b.date >= today).length;
+  const pendingReviews = data.reviews.filter((r) => r.status === 'pending').length;
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24">
@@ -297,6 +303,7 @@ export default function AdminApp() {
         {TABS.map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)} className={`cursor-pointer whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold ${tab === k ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
             {l}{k === 'bookings' && newCount > 0 && <span className="ml-2 rounded-full bg-hv px-2 py-0.5 text-xs text-white">{newCount}</span>}
+            {k === 'reviews' && pendingReviews > 0 && <span className="ml-2 rounded-full bg-hv px-2 py-0.5 text-xs text-white">{pendingReviews}</span>}
           </button>
         ))}
       </nav>
@@ -328,6 +335,10 @@ export default function AdminApp() {
       )}
 
       {tab === 'schedule' && <ScheduleTab data={data} onSave={saveSchedule} />}
+
+      {tab === 'reviews' && <ReviewsTab reviews={data.reviews} act={act} />}
+
+      {tab === 'photos' && <PhotosTab data={data} act={act} onError={setErr} />}
 
       {tab === 'services' && (
         <Rows<Service> rows={data.services} fields={SERVICE_FIELDS} priceKey="price_from"
@@ -391,6 +402,15 @@ export default function AdminApp() {
           <Form fields={SETTINGS_FIELDS} value={settings} onChange={setSettings} />
           <button className="btn-a mt-5" onClick={() => act({ action: 'content', key: 'settings', value: settings })}>Зберегти налаштування</button>
           <div className="mt-8 border-t border-slate-200 pt-6">
+            <h2 className="mb-1 font-bold">Сторінка «Про нас»</h2>
+            <p className="mb-3 text-sm text-slate-600">Текст сторінки /pro-nas/ у форматі Markdown: ## заголовок, **жирний**, - пункт списку. Фото для неї завантажуються на вкладці «Фото». Сюди варто дописати імена майстрів і їхній досвід.</p>
+            <textarea className="inp min-h-96 font-mono" value={about} onChange={(e) => setAbout(e.target.value)} />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button className="btn-a" onClick={() => act({ action: 'content', key: 'about', value: about }, 'Сторінку «Про нас» збережено')}>Зберегти «Про нас»</button>
+              <a className="btn-b" href="/pro-nas/" target="_blank" rel="noopener">Відкрити сторінку</a>
+            </div>
+          </div>
+          <div className="mt-8 border-t border-slate-200 pt-6">
             <h2 className="mb-1 font-bold">Політика конфіденційності</h2>
             <p className="mb-3 text-sm text-slate-600">
               Текст сторінки /polityka-konfidentsiynosti/ у форматі Markdown. Змінні підставляються з налаштувань: {'{{name}}'}, {'{{address}}'}, {'{{phone}}'}, {'{{email}}'}, {'{{site}}'}. Це типовий шаблон: перед публікацією його варто перевірити юристу й додати реквізити власника.
@@ -404,6 +424,138 @@ export default function AdminApp() {
         </section>
       )}
     </div>
+  );
+}
+
+/* ---------- Відгуки ---------- */
+const REVIEW_STATUS: [Review['status'], string][] = [['pending', 'На перевірці'], ['approved', 'Опубліковано'], ['hidden', 'Приховано']];
+const REVIEW_TINT: Record<Review['status'], string> = { pending: '!bg-amber-50 ring-1 ring-amber-200', approved: '', hidden: 'opacity-60' };
+
+function ReviewsTab({ reviews, act }: { reviews: Review[]; act: (b: Record<string, unknown>, ok?: string) => Promise<void> | void }) {
+  const [filter, setFilter] = useState<'all' | Review['status']>(reviews.some((r) => r.status === 'pending') ? 'pending' : 'all');
+  const [edit, setEdit] = useState<Review | null>(null);
+  const list = [...reviews].filter((r) => filter === 'all' || r.status === filter)
+    .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.date.localeCompare(a.date));
+  const save = (row: Review, ok = 'Збережено') => act({ action: 'review', row }, ok);
+  const count = (st: Review['status']) => reviews.filter((r) => r.status === st).length;
+  const blank = (): Review => ({ id: crypto.randomUUID(), author: '', car: '', text: '', rating: 5, date: new Date().toISOString().slice(0, 10), source: 'google', status: 'approved', created_at: new Date().toISOString() });
+  return (
+    <section className="grid gap-2">
+      <p className="text-sm text-slate-600">Відгуки з форми на сайті потрапляють сюди зі статусом «На перевірці» і з’являються на сайті лише після підтвердження. Тут же можна додати відгук вручну (наприклад, із Google Карт), змінити текст, автора, авто чи дату.</p>
+      <div className="mb-1 flex flex-wrap items-center gap-1">
+        {([['all', `Усі (${reviews.length})`], ['pending', `На перевірці (${count('pending')})`], ['approved', `Опубліковані (${count('approved')})`], ['hidden', `Приховані (${count('hidden')})`]] as const).map(([k, l]) => (
+          <button key={k} onClick={() => setFilter(k)} className={`cursor-pointer rounded-full px-3 py-1.5 text-sm font-semibold ${filter === k ? 'bg-ink text-white' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>{l}</button>
+        ))}
+        {!edit && <button className="btn-a ml-auto" onClick={() => setEdit(blank())}>+ Додати відгук</button>}
+      </div>
+      {edit && !reviews.some((r) => r.id === edit.id) && <ReviewForm value={edit} onChange={setEdit} onCancel={() => setEdit(null)} onSave={() => { if (!edit.author.trim() || !edit.text.trim()) return; save(edit, 'Відгук додано'); setEdit(null); }} />}
+      {list.length === 0 && <p className="card text-slate-500">Тут поки порожньо.</p>}
+      {list.map((r) => (edit?.id === r.id
+        ? <ReviewForm key={r.id} value={edit} onChange={setEdit} onCancel={() => setEdit(null)} onSave={() => { save(edit); setEdit(null); }} onDelete={() => { if (confirm(`Видалити відгук «${r.author}»? Відновити не вдасться.`)) { act({ action: 'deleteReview', id: r.id }, 'Видалено'); setEdit(null); } }} />
+        : (
+          <div key={r.id} className={`card !py-4 ${REVIEW_TINT[r.status]}`}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span className="text-hv">{'★'.repeat(r.rating)}<span className="text-slate-300">{'★'.repeat(5 - r.rating)}</span></span>
+              <b>{r.author}</b>
+              {r.car && <span className="text-slate-500">{r.car}</span>}
+              <span className="text-slate-500">{r.date.split('-').reverse().join('.')}</span>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{r.source === 'google' ? 'Google' : 'З сайту'}</span>
+              <span className="ml-auto text-xs font-semibold text-slate-500">{REVIEW_STATUS.find((x) => x[0] === r.status)?.[1]}</span>
+            </div>
+            <p className="mt-2 whitespace-pre-line text-sm">{r.text || <i className="text-slate-400">Без тексту (на сайті не показується)</i>}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {r.status === 'pending' && <button className="btn-a" onClick={() => save({ ...r, status: 'approved' }, 'Опубліковано на сайті')}>Підтвердити</button>}
+              {r.status !== 'hidden' && <button className="btn-b" onClick={() => save({ ...r, status: 'hidden' }, 'Приховано')}>{r.status === 'pending' ? 'Відхилити' : 'Сховати'}</button>}
+              {r.status === 'hidden' && <button className="btn-b" onClick={() => save({ ...r, status: 'approved' }, 'Опубліковано')}>Показати</button>}
+              <button className="btn-b" onClick={() => setEdit(r)}>Редагувати</button>
+            </div>
+          </div>
+        )))}
+    </section>
+  );
+}
+
+function ReviewForm({ value: r, onChange, onSave, onCancel, onDelete }: { value: Review; onChange: (r: Review) => void; onSave: () => void; onCancel: () => void; onDelete?: () => void }) {
+  const set = <K extends keyof Review>(k: K, v: Review[K]) => onChange({ ...r, [k]: v });
+  return (
+    <div className="card ring-2 ring-hv">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div><span className="lbl">Автор</span><input className="inp" value={r.author} onChange={(e) => set('author', e.target.value)} /></div>
+        <div><span className="lbl">Авто і робота (необов’язково)</span><input className="inp" value={r.car} onChange={(e) => set('car', e.target.value)} placeholder="Tesla Model 3, важелі" /></div>
+        <div><span className="lbl">Оцінка</span><select className="inp" value={r.rating} onChange={(e) => set('rating', +e.target.value)}>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{'★'.repeat(n)} {n}</option>)}</select></div>
+        <div><span className="lbl">Дата</span><input type="date" className="inp" value={r.date} onChange={(e) => set('date', e.target.value)} /></div>
+        <div><span className="lbl">Джерело</span><select className="inp" value={r.source} onChange={(e) => set('source', e.target.value as Review['source'])}><option value="google">Google Карти</option><option value="site">Сайт</option></select></div>
+        <div><span className="lbl">Статус</span><select className="inp" value={r.status} onChange={(e) => set('status', e.target.value as Review['status'])}>{REVIEW_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+        <div className="md:col-span-2"><span className="lbl">Текст відгуку</span><textarea className="inp min-h-32" value={r.text} onChange={(e) => set('text', e.target.value)} /></div>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button className="btn-a" onClick={onSave}>Зберегти</button>
+        <button className="btn-b" onClick={onCancel}>Скасувати</button>
+        {onDelete && <button className="btn-d ml-auto" onClick={onDelete}>Видалити</button>}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Фото ---------- */
+/** Обрізає фото по центру до квадрата 1200×1200 і стискає у WebP прямо в браузері. */
+async function squareWebp(file: File, size = 1200): Promise<Blob> {
+  const img = await createImageBitmap(file);
+  const side = Math.min(img.width, img.height);
+  const out = Math.min(size, side);
+  const c = document.createElement('canvas');
+  c.width = c.height = out;
+  c.getContext('2d')!.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, out, out);
+  return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('Не вдалося обробити фото'))), 'image/webp', 0.85));
+}
+
+function PhotosTab({ data, act, onError }: { data: Data; act: (b: Record<string, unknown>, ok?: string) => Promise<void> | void; onError: (e: string) => void }) {
+  const [busy, setBusy] = useState('');
+  const [alts, setAlts] = useState<Record<string, string>>({});
+  async function upload(slot: string, label: string, file?: File) {
+    if (!file) return;
+    setBusy(slot);
+    try {
+      const fd = new FormData();
+      fd.append('slot', slot);
+      fd.append('file', new File([await squareWebp(file)], `${slot}.webp`, { type: 'image/webp' }));
+      const r = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? 'Помилка завантаження');
+      await act({ action: 'photo', slot, url: j.url, alt: alts[slot] ?? data.photos[slot]?.alt ?? label }, 'Фото завантажено');
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'Помилка завантаження');
+    } finally { setBusy(''); }
+  }
+  return (
+    <section className="grid gap-3">
+      <p className="text-sm text-slate-600">Фото для сторінок сайту. Кожне обрізається по центру до квадрата 1:1 і стискається перед завантаженням, тож можна брати знімок просто з телефона. Поки фото немає, на сайті стоїть біла заглушка.</p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {data.photoSlots.map((s) => {
+          const p = data.photos[s.id];
+          const alt = alts[s.id] ?? p?.alt ?? s.label;
+          return (
+            <div key={s.id} className="card !p-3">
+              {p?.url
+                ? <img src={p.url} alt={alt} className="aspect-square w-full rounded-lg object-cover" />
+                : <div className="aspect-square w-full rounded-lg border border-slate-300 bg-white" />}
+              <div className="mt-2 font-semibold">{s.label}</div>
+              <a className="text-xs text-slate-500 underline" href={s.page} target="_blank" rel="noopener">{s.page}</a>
+              <span className="lbl mt-2">Опис фото (для Google)</span>
+              <input className="inp" value={alt} onChange={(e) => setAlts({ ...alts, [s.id]: e.target.value })}
+                onBlur={() => p?.url && alt !== p.alt && act({ action: 'photo', slot: s.id, url: p.url, alt })} />
+              <div className="mt-2 flex flex-wrap gap-2">
+                <label className={`btn-a cursor-pointer ${busy === s.id ? 'opacity-60' : ''}`}>
+                  {busy === s.id ? 'Завантажуємо…' : p?.url ? 'Замінити' : 'Завантажити'}
+                  <input type="file" accept="image/*" className="hidden" disabled={!!busy} onChange={(e) => { upload(s.id, s.label, e.target.files?.[0]); e.target.value = ''; }} />
+                </label>
+                {p?.url && <button className="btn-d" onClick={() => confirm('Прибрати фото? На сайті знову буде заглушка.') && act({ action: 'photo', slot: s.id, url: '' }, 'Фото прибрано')}>Прибрати</button>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

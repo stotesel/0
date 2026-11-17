@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import Reviews from '../components/Reviews.astro';
+import { breadcrumbLd, districtPhrase, loadSite } from '../lib/site';
+import { approved } from '../lib/reviews';
+
+const { settings, reviews, nextFree } = await loadSite();
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const list = approved(reviews);
+const avg = list.length ? list.reduce((s, r) => s + r.rating, 0) / list.length : 0;
+const avgStr = avg.toFixed(1).replace('.', ',');
+const near = districtPhrase(settings);
+const title = `Відгуки про ${settings.name} — автосервіс і сервіс Tesla${near ? `, ${near}` : ''}`;
+const description = `Відгуки клієнтів про ${settings.name}: ремонт Tesla та інших авто, ТО, ходова. ${list.length ? `Середня оцінка ${avgStr} з 5. ` : ''}${settings.street}, ${settings.city}.`;
+---
+<Base settings={settings} title={title} description={description} nextFree={nextFree}
+  jsonLd={[breadcrumbLd(origin, [['Головна', '/'], ['Відгуки', '/vidguky/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Відгуки</span></nav>
+    <h1>Відгуки клієнтів</h1>
+    {list.length > 0 && <p class="lead">Середня оцінка <b>{avgStr} з 5</b> за {list.length} відгуками з Google Карт і сайту. Розкажіть і ви, як пройшов візит.</p>}
+  </div></div>
+  <Reviews reviews={list} title="Що пишуть про нас" form />
+</Base>

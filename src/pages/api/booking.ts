@@ -14,7 +14,7 @@ function createdLabel(iso: string | undefined): string {
   }).format(Number.isNaN(d.getTime()) ? new Date() : d);
 }
 
-async function turnstileOk(token: unknown, ip: string | null) {
+export async function turnstileOk(token: unknown, ip: string | null) {
   if (!env.TURNSTILE_SECRET_KEY) return true; // Turnstile ще не підключено
   const body = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: String(token ?? '') });
   if (ip) body.set('remoteip', ip);
@@ -22,7 +22,7 @@ async function turnstileOk(token: unknown, ip: string | null) {
   return ((await r.json()) as { success: boolean }).success;
 }
 
-async function notifyTelegram(text: string) {
+export async function notifyTelegram(text: string) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return; // Telegram ще не підключено
   await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
