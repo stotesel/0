@@ -5,6 +5,9 @@ import Base from '../layouts/Base.astro';
 import Booking from '../components/blocks/Booking.astro';
 import { areaServed, breadcrumbLd, loadSite, price, tel } from '../lib/site';
 import { serviceTexts } from '../lib/serviceTexts';
+import { articlesFor } from '../lib/articles';
+import { TESLA_MODELS } from '../lib/teslaModels';
+import { RU_SERVICES } from '../lib/ru/services';
 
 const { settings, blocks, services, nextFree } = await loadSite();
 const s = services.find((x) => x.slug === Astro.params.slug);
@@ -19,6 +22,9 @@ const body = s.body?.trim() || serviceTexts[s.slug] || '';
 const lcFirst = (t: string) => (/^[A-ZА-ЯІЇЄҐ]{2}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
 const description = s.seo_description || `${s.title} в автосервісі ${settings.name}: ${lcFirst(s.summary)}. ${hasPrice ? `Від ${price(s.price_from)} грн, ` : ''}${s.duration}. Запис онлайн або за телефоном ${settings.phone}.`;
 const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
+// Внутрішні посилання: статті, що згадують цю послугу, і моделі Tesla, для яких вона типова
+const related = articlesFor(`/${s.slug}/`).slice(0, 6);
+const models = TESLA_MODELS.filter((m) => s.kind === 'ev' || m.services.includes(s.slug));
 const serviceLd = {
   '@context': 'https://schema.org',
   '@type': 'Service',
@@ -29,7 +35,7 @@ const serviceLd = {
   ...(hasPrice ? { offers: { '@type': 'Offer', priceCurrency: 'UAH', priceSpecification: { '@type': 'PriceSpecification', minPrice: s.price_from, priceCurrency: 'UAH' } } } : {}),
 };
 ---
-<Base settings={settings} title={title} description={description} nextFree={nextFree}
+<Base settings={settings} title={title} description={description} nextFree={nextFree} alt={RU_SERVICES[s.slug] ? `/ru/${s.slug}/` : ''}
   jsonLd={[serviceLd, breadcrumbLd(origin, [['Головна', '/'], ['Послуги', '/poslugy/'], [s.title, `/${s.slug}/`]])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><a href="/poslugy/">Послуги</a><span>/</span><span>{s.title}</span></nav>
@@ -54,5 +60,25 @@ const serviceLd = {
       <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
     </aside>
   </div></div>
+  {models.length > 0 && (
+    <div class="page-body"><div class="wrap">
+      <h2 class="svc-related">{s.title}: Tesla</h2>
+      <div class="cards">
+        {models.map((m) => <a class="card-i" href={`/servis-tesla/${m.slug}/`}><h3>Tesla {m.name}</h3><p>{m.lead}</p></a>)}
+      </div>
+    </div></div>
+  )}
+  {related.length > 0 && (
+    <div class="page-body"><div class="wrap">
+      <h2 class="svc-related">Корисні статті</h2>
+      <div class="cards">
+        {related.map((a) => <a class="card-i" href={`/statti/${a.slug}/`}><h3>{a.title}</h3><p>{a.lead}</p></a>)}
+      </div>
+    </div></div>
+  )}
   <Booking data={booking} settings={settings} services={services} tight preselect={s.title} />
 </Base>
+<style>
+  .svc-related{font:600 26px/1.2 var(--display);letter-spacing:-.02em;margin-bottom:20px}
+</style>
+

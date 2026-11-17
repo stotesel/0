@@ -3,8 +3,9 @@ import { env } from 'cloudflare:workers';
 import BookingForm from '../BookingForm';
 import type { Service, Settings } from '../../lib/types';
 import { tel } from '../../lib/site';
-interface Props { data: Record<string, any>; settings: Settings; services: Service[]; tight?: boolean; preselect?: string }
-const { data: d, settings, services, tight = false, preselect = '' } = Astro.props;
+import type { Lang } from '../../lib/i18n';
+interface Props { data: Record<string, any>; settings: Settings; services: Service[]; tight?: boolean; preselect?: string; lang?: Lang }
+const { data: d, settings, services, tight = false, preselect = '', lang = 'uk' } = Astro.props;
 ---
 <section id="book" style={tight ? 'padding-top:24px' : undefined}>
   <div class="wrap book">
@@ -22,6 +23,7 @@ const { data: d, settings, services, tight = false, preselect = '' } = Astro.pro
       preselect={preselect}
       doneText={d.doneText}
       turnstileKey={env.TURNSTILE_SITE_KEY ?? ''}
+      lang={lang}
     />
   </div>
 </section>

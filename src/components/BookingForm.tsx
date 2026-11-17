@@ -1,12 +1,10 @@
 // Форма запису з макета. Дні та час приходять із /api/slots (їх виставляє адмін),
 // заявка йде на /api/booking, після чого слот стає зайнятим.
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { T, type Lang } from '../lib/i18n';
 
 interface Day { date: string; dow: string; day: string; slots: { time: string; free: boolean }[] }
-interface Props { services: string[]; preselect?: string; doneText: string; turnstileKey?: string }
-
-const TYPES = ['Бензин / дизель', 'Газ / ГБО', 'Гібрид', 'Електромобіль'];
-const FIRST = 'Не знаю, потрібна діагностика';
+interface Props { services: string[]; preselect?: string; doneText: string; turnstileKey?: string; lang?: Lang }
 const resetTurnstile = () => (window as any).turnstile?.reset?.();
 
 /** Українські 9 цифр після коду країни: приймає +380…, 380…, 0… або просто цифри (у тому числі вставлені). */
@@ -24,7 +22,10 @@ function formatPhone(raw: string): string {
   return `+380 ${g.join(' ')}`;
 }
 
-export default function BookingForm({ services, preselect = '', doneText, turnstileKey = '' }: Props) {
+export default function BookingForm({ services, preselect = '', doneText, turnstileKey = '', lang = 'uk' }: Props) {
+  const L = T[lang].f;
+  const TYPES = L.types as readonly string[];
+  const FIRST = L.first;
   const [days, setDays] = useState<Day[] | null>(null);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -42,7 +43,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
 
   async function load(keepDate = '') {
     try {
-      const r = await fetch('/api/slots');
+      const r = await fetch(lang === 'ru' ? '/api/slots?lang=ru' : '/api/slots');
       const list: Day[] = (await r.json()).days;
       setDays(list);
       const d = list.find((x) => x.date === keepDate) ?? list[0];
@@ -75,7 +76,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
     const vinOk = vin === '' || /^[A-HJ-NPR-Z0-9]{17}$/.test(vin);
     setVinBad(!vinOk);
     if (!vinOk) return (e.currentTarget.elements.namedItem('vin') as HTMLInputElement).focus();
-    if (!date || !time) return setError('Оберіть день і час візиту.');
+    if (!date || !time) return setError(L.pickTime);
     setBusy(true);
     setError('');
     const body = {
@@ -89,7 +90,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
       const data = await r.json();
       if (!r.ok) {
         resetTurnstile(); // токен одноразовий: після помилки потрібен новий
-        setError(data.error ?? 'Не вдалося надіслати заявку. Зателефонуйте нам, будь ласка.');
+        setError(data.error ?? L.fail);
         if (r.status === 409) await load(date);
         return;
       }
@@ -98,7 +99,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch {
       resetTurnstile();
-      setError('Немає зв’язку із сервером. Спробуйте ще раз або зателефонуйте.');
+      setError(L.offline);
     } finally {
       setBusy(false);
     }
@@ -108,7 +109,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
     <form className={`card${sent ? ' sent' : ''}`} id="bookForm" noValidate onSubmit={submit} ref={formRef}>
       <div className="form-body">
         <div className="field">
-          <span className="lbl" id="l-type">Тип авто</span>
+          <span className="lbl" id="l-type">{L.type}</span>
           <div className="chips" role="radiogroup" aria-labelledby="l-type">
             {TYPES.map((t, i) => (
               <span key={t} style={{ display: 'contents' }}>
@@ -120,28 +121,28 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
         </div>
         <div className="grid2">
           <div className="field">
-            <label htmlFor="car">Марка і модель</label>
-            <input type="text" id="car" name="car" placeholder="Напр. Nissan Leaf 2019" autoComplete="off" maxLength={80} />
+            <label htmlFor="car">{L.car}</label>
+            <input type="text" id="car" name="car" placeholder={L.carPh} autoComplete="off" maxLength={80} />
           </div>
           <div className="field">
-            <label htmlFor="svc">Що потрібно зробити</label>
+            <label htmlFor="svc">{L.svc}</label>
             <select id="svc" name="svc" defaultValue={preselect || FIRST}>
               <option>{FIRST}</option>
               {services.map((s) => <option key={s}>{s}</option>)}
-              <option>Інше</option>
+              <option>{L.other}</option>
             </select>
           </div>
         </div>
         <div className={`field${vinBad ? ' invalid' : ''}`}>
-          <label htmlFor="vin">VIN-код (необов'язково)</label>
-          <input type="text" id="vin" name="vin" placeholder="17 символів із техпаспорта" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} style={{ textTransform: 'uppercase' }} />
-          <div className="err">VIN складається з 17 латинських літер і цифр, без I, O та Q.</div>
+          <label htmlFor="vin">{L.vin}</label>
+          <input type="text" id="vin" name="vin" placeholder={L.vinPh} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} style={{ textTransform: 'uppercase' }} />
+          <div className="err">{L.vinErr}</div>
         </div>
         <div className="field">
-          <span className="lbl" id="l-day">День</span>
+          <span className="lbl" id="l-day">{L.day}</span>
           <div className="chips" id="days" role="radiogroup" aria-labelledby="l-day">
-            {days === null && <span className="slots-empty">Завантажуємо вільний час…</span>}
-            {days?.length === 0 && <span className="slots-empty">Найближчим часом вільних вікон немає. Зателефонуйте, знайдемо варіант.</span>}
+            {days === null && <span className="slots-empty">{L.loading}</span>}
+            {days?.length === 0 && <span className="slots-empty">{L.noSlots}</span>}
             {days?.map((d) => (
               <span key={d.date} style={{ display: 'contents' }}>
                 <input type="radio" name="day" id={`d${d.date}`} checked={date === d.date} onChange={() => { setDate(d.date); setTime(firstFree(d)); }} />
@@ -152,12 +153,12 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
         </div>
         {current && (
           <div className="field">
-            <span className="lbl" id="l-time">Час</span>
+            <span className="lbl" id="l-time">{L.time}</span>
             <div className="chips" id="slots" role="radiogroup" aria-labelledby="l-time">
               {current.slots.map((s) => (
                 <span key={s.time} style={{ display: 'contents' }}>
                   <input type="radio" name="slot" id={`s${s.time}`} disabled={!s.free} checked={time === s.time} onChange={() => setTime(s.time)} />
-                  <label htmlFor={`s${s.time}`} className={s.free ? '' : 'busy'} title={s.free ? undefined : 'Зайнято'}>{s.time.replace(/^0/, '')}</label>
+                  <label htmlFor={`s${s.time}`} className={s.free ? '' : 'busy'} title={s.free ? undefined : L.busy}>{s.time.replace(/^0/, '')}</label>
                 </span>
               ))}
             </div>
@@ -165,11 +166,11 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
         )}
         <div className="grid2">
           <div className="field">
-            <label htmlFor="name">Ваше ім'я</label>
+            <label htmlFor="name">{L.name}</label>
             <input type="text" id="name" name="name" autoComplete="given-name" maxLength={60} />
           </div>
           <div className={`field${phoneBad ? ' invalid' : ''}`} id="f-phone">
-            <label htmlFor="phone">Телефон</label>
+            <label htmlFor="phone">{L.phone}</label>
             <input
               type="tel" id="phone" name="phone" placeholder="+380 50 000 00 00" autoComplete="tel" inputMode="tel" maxLength={17}
               value={phone}
@@ -177,24 +178,24 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
               onFocus={() => !phone && setPhone('+380 ')}
               onBlur={() => !nationalDigits(phone) && setPhone('')}
             />
-            <div className="err">Вкажіть номер у форматі +380 XX XXX XX XX, щоб ми могли підтвердити запис.</div>
+            <div className="err">{L.phoneErr}</div>
           </div>
         </div>
         <div className="field">
-          <label htmlFor="note">Що турбує (необов'язково)</label>
-          <textarea id="note" name="note" maxLength={600} placeholder="Стукіт спереду справа на нерівностях, горить чек…" />
+          <label htmlFor="note">{L.note}</label>
+          <textarea id="note" name="note" maxLength={600} placeholder={L.notePh} />
         </div>
         {/* пастка для ботів: люди це поле не бачать */}
         <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }} />
         {turnstileKey && <div ref={tsRef} className="cf-turnstile" data-sitekey={turnstileKey} style={{ marginBottom: 16 }} />}
         <div className="form-foot">
-          <small>Натискаючи кнопку, ви погоджуєтесь на обробку персональних даних і дзвінок для підтвердження запису. <a href="/polityka-konfidentsiynosti/" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>Політика конфіденційності</a></small>
-          <button className="btn btn-ink" type="submit" disabled={busy}>{busy ? 'Надсилаємо…' : 'Надіслати заявку'}</button>
+          <small>{L.consent} <a href="/polityka-konfidentsiynosti/" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>{L.privacy}</a></small>
+          <button className="btn btn-ink" type="submit" disabled={busy}>{busy ? L.sending : L.send}</button>
         </div>
         {error && <div className="form-err" role="alert">{error}</div>}
       </div>
       <div className="done" role="status">
-        <h3>Заявку надіслано</h3>
+        <h3>{L.done}</h3>
         <p>{doneText}</p>
         {sent && (
           <div className="sum">
@@ -203,7 +204,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
             {sent.svc}
           </div>
         )}
-        <a className="btn btn-ghost" href="/">На головну</a>
+        <a className="btn btn-ghost" href={L.homeHref}>{L.toHome}</a>
       </div>
     </form>
   );

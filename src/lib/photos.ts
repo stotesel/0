@@ -1,4 +1,4 @@
-import { ARTICLES } from './articles';
+import { ALL_ARTICLES } from './articles';
 
 // Місця на сайті, куди через адмінку можна завантажити фото (квадрат 1:1).
 // Поки фото немає, на сторінці стоїть біла заглушка.
@@ -11,5 +11,5 @@ export const PHOTO_SLOTS: { id: string; label: string; page: string }[] = [
   { id: 'model-y', label: 'Tesla Model Y у сервісі', page: '/servis-tesla/model-y/' },
   { id: 'model-s', label: 'Tesla Model S у сервісі', page: '/servis-tesla/model-s/' },
   { id: 'model-x', label: 'Tesla Model X у сервісі', page: '/servis-tesla/model-x/' },
-  ...ARTICLES.map((a) => ({ id: `article-${a.slug}`, label: `Стаття: ${a.title}`, page: `/statti/${a.slug}/` })),
+  ...ALL_ARTICLES.map((a) => ({ id: `article-${a.slug}`, label: `Стаття: ${a.title}`, page: `/statti/${a.slug}/` })),
 ];

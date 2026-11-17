@@ -1,0 +1,50 @@
+---
+// Русская главная. Тексты — src/lib/ru/home.ts, цены и расписание — общие с украинской версией.
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/blocks/Hero.astro';
+import Booking from '../../components/blocks/Booking.astro';
+import PriceList from '../../components/PriceList.astro';
+import Contacts from '../../components/Contacts.astro';
+import Reviews from '../../components/Reviews.astro';
+import { autoRepairLd, faqLd, loadSite } from '../../lib/site';
+import { approved } from '../../lib/reviews';
+import { ruService, ruSettings } from '../../lib/i18n';
+import { RU_HOME as H } from '../../lib/ru/home';
+
+const site = await loadSite();
+const settings = ruSettings(site.settings);
+const services = site.services.map(ruService);
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const reviews = approved(site.reviews);
+---
+<Base settings={settings} title={H.seoTitle} description={H.seoDescription} lang="ru" alt="/"
+  jsonLd={[autoRepairLd(settings, services, origin), faqLd(H.faq.items)]}>
+  <Hero data={H.hero} settings={settings} services={services} lang="ru" />
+
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-head"><h2>{H.services.title}</h2><p>{H.services.text}</p></div>
+      <PriceList services={services} foot={H.services.foot} lang="ru" />
+    </div>
+  </section>
+
+  <section style="padding-top:24px">
+    <div class="wrap">
+      <div class="banner banner-sm">
+        <div><h2>{H.tyres.title}</h2><p>{H.tyres.text}</p></div>
+        <a class="btn btn-hv" href={H.tyres.link}>{H.tyres.button}</a>
+      </div>
+    </div>
+  </section>
+
+  <Booking data={H.booking} settings={settings} services={services} tight lang="ru" />
+  {reviews.length > 0 && <Reviews reviews={reviews} title={H.reviews.title} text={H.reviews.text} limit={6} tight lang="ru" />}
+  <Contacts title={H.contacts.title} settings={settings} tight lang="ru" />
+
+  <section id="faq" style="padding-top:24px">
+    <div class="wrap faq">
+      <h2>{H.faq.title}</h2>
+      <div>{H.faq.items.map((q) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}</div>
+    </div>
+  </section>
+</Base>

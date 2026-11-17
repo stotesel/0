@@ -1,0 +1,118 @@
+---
+// Русская страница модели Tesla: /ru/servis-tesla/model-3/ и т. д.
+import { marked } from 'marked';
+import Base from '../../../layouts/Base.astro';
+import Booking from '../../../components/blocks/Booking.astro';
+import Photo from '../../../components/Photo.astro';
+import Reviews from '../../../components/Reviews.astro';
+import { areaServed, breadcrumbLd, faqLd, loadSite, price, tel } from '../../../lib/site';
+import { ruService, ruSettings } from '../../../lib/i18n';
+import { teslaReviews } from '../../../lib/reviews';
+import { TESLA_MODELS, teslaModel } from '../../../lib/teslaModels';
+import { RU_TESLA_MODELS } from '../../../lib/ru/tesla';
+import { RU_HOME } from '../../../lib/ru/home';
+
+const base = teslaModel(Astro.params.model ?? '');
+if (!base) return Astro.rewrite('/404');
+const m = { ...base, ...RU_TESLA_MODELS[base.slug] };
+
+const site = await loadSite();
+const settings = ruSettings(site.settings);
+const services = site.services.map(ruService);
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const related = m.services.map((slug) => services.find((s) => s.slug === slug)).filter((s) => !!s);
+const minPrice = Math.min(...related.map((s) => s.price_from).filter((n) => n > 0));
+const modelRe = new RegExp(m.name.replace(' ', '\\s*'), 'i');
+const all = teslaReviews(site.reviews);
+const own = all.filter((r) => modelRe.test(`${r.car} ${r.text}`));
+const shownReviews = (own.length ? [...own, ...all.filter((r) => !own.includes(r))] : all).slice(0, 3);
+const others = TESLA_MODELS.filter((x) => x.slug !== m.slug);
+
+const title = `Ремонт Tesla ${m.name} в Киеве — Нивки и Виноградарь | ${settings.name}`;
+const description = `Ремонт и ТО Tesla ${m.name} в Киеве: ${m.issues.slice(0, 3).map((i) => i.title.toLowerCase()).join(', ')}. ${settings.street}. Запись: ${settings.phone}.`;
+const serviceLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: `Ремонт и обслуживание Tesla ${m.name}`,
+  serviceType: 'Ремонт электромобилей Tesla',
+  description,
+  inLanguage: 'ru',
+  areaServed: areaServed(settings),
+  provider: { '@id': `${origin}/#autorepair` },
+};
+---
+<Base settings={settings} title={title} description={description} lang="ru" alt={`/servis-tesla/${m.slug}/`}
+  jsonLd={[serviceLd, faqLd(m.faq), breadcrumbLd(origin, [['Главная', '/ru/'], ['Сервис Tesla', '/ru/servis-tesla/'], [`Tesla ${m.name}`, `/ru/servis-tesla/${m.slug}/`]])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навигация"><a href="/ru/">Главная</a><span>/</span><a href="/ru/servis-tesla/">Сервис Tesla</a><span>/</span><span>{m.name}</span></nav>
+    <h1>Ремонт Tesla {m.name} в Киеве</h1>
+    <p class="lead">{m.lead}</p>
+  </div></div>
+
+  <div class="page-body"><div class="wrap svc">
+    <div class="svc-card">
+      <div class="prose" style="margin-top:0" set:html={marked.parse(m.intro)} />
+      <div class="prose">
+        <h2>Типичные проблемы Tesla {m.name}</h2>
+        {m.issues.map((i) => <><h3>{i.title}</h3><p>{i.text}</p></>)}
+        <h2>Регламентное ТО {m.name}</h2>
+        <table>
+          <thead><tr><th>Что делаем</th><th>Как часто</th></tr></thead>
+          <tbody>{m.maintenance.map(([a, b]) => <tr><td>{a}</td><td>{b}</td></tr>)}</tbody>
+        </table>
+        <h2>Где нас найти</h2>
+        <p>{settings.name}: {settings.street}, {settings.city}, между Нивками и Виноградарем. Работаем по записи, поэтому авто не ждёт в очереди.</p>
+      </div>
+    </div>
+    <aside class="svc-side">
+      <Photo photos={site.photos} slot={m.slug} alt={`Tesla ${m.name} в сервисе ${settings.name}`} eager />
+      <div><div class="k">Годы выпуска</div><div class="v" style="font-size:22px">{m.years}</div></div>
+      {Number.isFinite(minPrice) && <div><div class="k">Работы для {m.name}</div><div class="v"><small>от</small>{price(minPrice)} грн</div></div>}
+      <p class="k">Цена без запчастей. Точную сумму фиксируем в смете до начала работ.</p>
+      <a class="btn btn-hv" href="#book">Записаться</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+    </aside>
+  </div></div>
+
+  {related.length > 0 && (
+    <div class="page-body"><div class="wrap">
+      <h2 class="svc-related">Услуги для Tesla {m.name}</h2>
+      <div class="cards">
+        {related.map((s) => (
+          <a class="card-i" href={`/ru/${s.slug}/`}>
+            {s.kind === 'ev' && <span class="tag">EV</span>}
+            <h3>{s.title}</h3>
+            <p>{s.summary}</p>
+            <div class="meta"><span class="cost">{s.price_from > 0 ? <><small>от</small>{price(s.price_from)} грн</> : <small>по запросу</small>}</span><span>{s.duration}</span></div>
+          </a>
+        ))}
+      </div>
+    </div></div>
+  )}
+
+  {shownReviews.length > 0 && <Reviews reviews={shownReviews} title="Отзывы владельцев Tesla" tight lang="ru" />}
+
+  <section id="faq">
+    <div class="wrap faq">
+      <h2>Вопросы о Tesla {m.name}</h2>
+      <div>{m.faq.map((q) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}</div>
+    </div>
+  </section>
+
+  <div class="page-body"><div class="wrap">
+    <h2 class="svc-related">Другие модели Tesla</h2>
+    <div class="cards">
+      {others.map((o) => <a class="card-i" href={`/ru/servis-tesla/${o.slug}/`}><h3>Tesla {o.name}</h3><p>{RU_TESLA_MODELS[o.slug].lead}</p></a>)}
+    </div>
+  </div></div>
+
+  <Booking data={RU_HOME.booking} settings={settings} services={services} tight lang="ru" />
+</Base>
+
+<style>
+  .svc-related{font:600 26px/1.2 var(--display);letter-spacing:-.02em;margin-bottom:20px}
+  .svc-card :global(table){width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:16px;overflow-wrap:anywhere}
+  .svc-card :global(th), .svc-card :global(td){text-align:left;padding:10px 8px;border-bottom:1px solid rgba(0,0,0,.1);vertical-align:top}
+  .svc-card :global(th){font-weight:600}
+  .svc-card h3{font:600 17px/1.35 var(--body);margin-top:20px}
+</style>

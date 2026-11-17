@@ -8,6 +8,7 @@ import Reviews from '../../components/Reviews.astro';
 import { PRICE_ON_REQUEST, areaServed, breadcrumbLd, districtPhrase, faqLd, loadSite, price, tel } from '../../lib/site';
 import { teslaReviews } from '../../lib/reviews';
 import { TESLA_MODELS, teslaModel } from '../../lib/teslaModels';
+import { articlesFor } from '../../lib/articles';
 
 const m = teslaModel(Astro.params.model ?? '');
 if (!m) return Astro.rewrite('/404');
@@ -28,6 +29,7 @@ const shownReviews = (own.length ? [...own, ...all.filter((r) => !own.includes(r
 const title = `Ремонт Tesla ${m.name} у ${city}${near ? ` — ${near}` : ''} | ${settings.name}`;
 const description = `Ремонт і ТО Tesla ${m.name} у ${city}: ${m.issues.slice(0, 3).map((i) => i.title.toLowerCase()).join(', ')}. ${settings.street}. Запис: ${settings.phone}.`;
 const others = TESLA_MODELS.filter((x) => x.slug !== m.slug);
+const relArticles = articlesFor(`/servis-tesla/${m.slug}/`);
 
 const serviceLd = {
   '@context': 'https://schema.org',
@@ -39,7 +41,7 @@ const serviceLd = {
   provider: { '@id': `${origin}/#autorepair` },
 };
 ---
-<Base settings={settings} title={title} description={description} nextFree={nextFree}
+<Base settings={settings} title={title} description={description} nextFree={nextFree} alt={`/ru/servis-tesla/${m.slug}/`}
   jsonLd={[serviceLd, faqLd(m.faq), breadcrumbLd(origin, [['Головна', '/'], ['Сервіс Tesla', '/servis-tesla/'], [`Tesla ${m.name}`, `/servis-tesla/${m.slug}/`]])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><a href="/servis-tesla/">Сервіс Tesla</a><span>/</span><span>{m.name}</span></nav>
@@ -96,6 +98,15 @@ const serviceLd = {
       <div>{m.faq.map((q) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}</div>
     </div>
   </section>
+
+  {relArticles.length > 0 && (
+    <div class="page-body"><div class="wrap">
+      <h2 class="svc-related">Статті про Tesla {m.name}</h2>
+      <div class="cards">
+        {relArticles.map((a) => <a class="card-i" href={`/statti/${a.slug}/`}><h3>{a.title}</h3><p>{a.lead}</p></a>)}
+      </div>
+    </div></div>
+  )}
 
   <div class="page-body"><div class="wrap">
     <h2 class="svc-related">Інші моделі Tesla</h2>

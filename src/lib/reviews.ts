@@ -4,10 +4,11 @@ import type { Review } from './types';
 export const MAPS_REVIEWS_URL = 'https://www.google.com/maps/place/STOtesel/@50.4910586,30.4002541,17z/data=!4m8!3m7!1s0x40d4cd18c9de8083:0xc1943be156fb8fb1!8m2!3d50.4910586!4d30.4002541!9m1!1b1';
 
 const MONTHS = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
-/** 2026-11-03 → «3 листопада 2026» */
-export function reviewDate(date: string) {
+const MONTHS_RU = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+/** 2026-11-03 → «3 листопада 2026» (або «3 ноября 2026» для російської) */
+export function reviewDate(date: string, lang: 'uk' | 'ru' = 'uk') {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date);
-  return m ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : '';
+  return m ? `${+m[3]} ${(lang === 'ru' ? MONTHS_RU : MONTHS)[+m[2] - 1]} ${m[1]}` : '';
 }
 
 /** Підтверджені відгуки з текстом, нові спершу. */

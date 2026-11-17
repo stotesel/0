@@ -1,29 +1,31 @@
 ---
 // Прайс з макета: фільтр за типом авто, на телефоні перші 6 позицій + кнопка.
 import type { Service } from '../lib/types';
-import { PRICE_ON_REQUEST, price } from '../lib/site';
-interface Props { services: Service[]; foot?: string; collapsed?: boolean }
-const { services, foot = '', collapsed = true } = Astro.props;
-const KIND: Record<string, string> = { ev: 'EV', hyb: 'гібрид', ice: 'ДВЗ' };
+import { price } from '../lib/site';
+import { T, lp, type Lang } from '../lib/i18n';
+interface Props { services: Service[]; foot?: string; collapsed?: boolean; lang?: Lang }
+const { services, foot = '', collapsed = true, lang = 'uk' } = Astro.props;
+const t = T[lang];
+const KIND: Record<string, string> = { ev: 'EV', hyb: t.kindHyb, ice: t.kindIce };
 ---
-<div class="tabs" role="group" aria-label="Фільтр послуг" id="tabs">
-  <button type="button" data-f="all" aria-pressed="true">Усі послуги</button>
-  <button type="button" data-f="ice" aria-pressed="false">Бензин / дизель</button>
-  <button type="button" data-f="hyb" aria-pressed="false">Гібриди</button>
-  <button type="button" data-f="ev" aria-pressed="false">Електромобілі</button>
+<div class="tabs" role="group" aria-label={t.filter} id="tabs" data-show={t.showAll} data-hide={t.collapse}>
+  <button type="button" data-f="all" aria-pressed="true">{t.allServices}</button>
+  <button type="button" data-f="ice" aria-pressed="false">{t.ice}</button>
+  <button type="button" data-f="hyb" aria-pressed="false">{t.hyb}</button>
+  <button type="button" data-f="ev" aria-pressed="false">{t.ev}</button>
 </div>
 <div class:list={['price', { collapsed }]} id="price">
   {services.map((s, i) => (
     <div class:list={['row', { extra: collapsed && i >= 6 }]} data-k={s.kind}>
-      <h3><a href={`/${s.slug}/`}>{s.title}</a>{s.kind !== 'all' && <span class="kind">{KIND[s.kind]}</span>}</h3>
+      <h3><a href={lp(lang, `/${s.slug}/`)}>{s.title}</a>{s.kind !== 'all' && <span class="kind">{KIND[s.kind]}</span>}</h3>
       <p>{s.summary}</p>
-      <div class="cost">{s.price_from > 0 ? <><small>від</small>{price(s.price_from)} грн</> : <small>{PRICE_ON_REQUEST}</small>}</div>
+      <div class="cost">{s.price_from > 0 ? <><small>{t.from}</small>{price(s.price_from)} {t.uah}</> : <small>{t.onRequest}</small>}</div>
       <div class="time">{s.duration}</div>
     </div>
   ))}
 </div>
 {collapsed && services.length > 6 && (
-  <button type="button" class="btn btn-ghost more-btn" id="moreBtn" aria-expanded="false" aria-controls="price">Показати всі послуги</button>
+  <button type="button" class="btn btn-ghost more-btn" id="moreBtn" aria-expanded="false" aria-controls="price">{t.showAll}</button>
 )}
 {foot && <p class="price-foot">{foot}</p>}
 
@@ -33,7 +35,7 @@ const KIND: Record<string, string> = { ev: 'EV', hyb: 'гібрид', ice: 'ДВ
     moreBtn?.addEventListener('click', () => {
       const c = priceEl.classList.toggle('collapsed');
       moreBtn.setAttribute('aria-expanded', !c);
-      moreBtn.textContent = c ? 'Показати всі послуги' : 'Згорнути';
+      moreBtn.textContent = c ? tabs.dataset.show : tabs.dataset.hide;
       if (c) priceEl.scrollIntoView({ block: 'start' });
     });
     window.setFilter = (f) => {

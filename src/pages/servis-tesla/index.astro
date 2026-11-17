@@ -5,7 +5,7 @@ import Base from '../../layouts/Base.astro';
 import Booking from '../../components/blocks/Booking.astro';
 import Reviews from '../../components/Reviews.astro';
 import { TESLA_MODELS } from '../../lib/teslaModels';
-import { ARTICLES } from '../../lib/articles';
+import { ALL_ARTICLES } from '../../lib/articles';
 import { teslaReviews } from '../../lib/reviews';
 import { PRICE_ON_REQUEST, areaServed, districtPhrase, breadcrumbLd, faqLd, loadSite, price, tel } from '../../lib/site';
 
@@ -101,7 +101,7 @@ const serviceLd = {
   ...(minPrice ? { offers: { '@type': 'Offer', priceCurrency: 'UAH', priceSpecification: { '@type': 'PriceSpecification', minPrice, priceCurrency: 'UAH' } } } : {}),
 };
 ---
-<Base settings={settings} title={title} description={description} nextFree={nextFree}
+<Base settings={settings} title={title} description={description} nextFree={nextFree} alt="/ru/servis-tesla/"
   jsonLd={[serviceLd, faqLd(faq), breadcrumbLd(origin, [['Головна', '/'], ['Сервіс Tesla', '/servis-tesla/']])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Сервіс Tesla</span></nav>
@@ -111,7 +111,7 @@ const serviceLd = {
 
   <div class="page-body"><div class="wrap svc">
     <div class="svc-card">
-      <img src="/img/tesla-engraving.webp" width="1200" height="549" alt="Tesla, вид зверху" loading="lazy" style="width:100%;height:auto;margin-bottom:8px">
+      <img src="/img/tesla-engraving.webp" srcset="/img/tesla-engraving-700.webp 700w, /img/tesla-engraving.webp 1200w" sizes="(max-width: 760px) 100vw, 700px" width="1200" height="549" alt="Tesla, вид зверху" loading="lazy" style="width:100%;height:auto;margin-bottom:8px">
       <div class="prose" set:html={marked.parse(body)} />
     </div>
     <aside class="svc-side">
@@ -151,7 +151,7 @@ const serviceLd = {
   <div class="page-body"><div class="wrap">
     <h2 class="svc-related">Статті для власників Tesla</h2>
     <div class="cards">
-      {ARTICLES.map((a) => <a class="card-i" href={`/statti/${a.slug}/`}><h3>{a.title}</h3><p>{a.lead}</p></a>)}
+      {ALL_ARTICLES.filter((a) => a.category !== 'general').map((a) => <a class="card-i" href={`/statti/${a.slug}/`}><h3>{a.title}</h3><p>{a.lead}</p></a>)}
     </div>
   </div></div>
 

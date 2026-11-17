@@ -4,6 +4,7 @@
 
 export interface Article {
   slug: string;
+  category?: 'tesla' | 'general'; // за замовчуванням tesla
   title: string; // H1
   seoTitle: string;
   description: string;
@@ -12,6 +13,9 @@ export interface Article {
   body: string; // Markdown
   links: [string, string][]; // [назва, шлях] — куди вести читача далі
 }
+
+import { TESLA_ARTICLES } from './articlesTesla';
+import { GENERAL_ARTICLES } from './articlesGeneral';
 
 export const ARTICLES: Article[] = [
   {
@@ -187,4 +191,8 @@ Tesla для ринку США має власний компактний роз
   },
 ];
 
-export const article = (slug: string) => ARTICLES.find((a) => a.slug === slug);
+/** Усі статті: перші п'ять + друга хвиля про Tesla + загальні про обслуговування авто. */
+export const ALL_ARTICLES: Article[] = [...ARTICLES, ...TESLA_ARTICLES, ...GENERAL_ARTICLES];
+export const article = (slug: string) => ALL_ARTICLES.find((a) => a.slug === slug);
+/** Статті, що посилаються на сторінку (послугу, модель): для блоку «Корисні статті». */
+export const articlesFor = (path: string) => ALL_ARTICLES.filter((a) => a.links.some(([, h]) => h === path));

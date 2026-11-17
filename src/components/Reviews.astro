@@ -3,6 +3,7 @@
 import { env } from 'cloudflare:workers';
 import type { Review } from '../lib/types';
 import { MAPS_REVIEWS_URL, reviewDate } from '../lib/reviews';
+import { T, type Lang } from '../lib/i18n';
 
 interface Props {
   reviews: Review[];
@@ -13,8 +14,10 @@ interface Props {
   more?: boolean;
   id?: string;
   tight?: boolean;
+  lang?: Lang;
 }
-const { reviews, title = 'Відгуки клієнтів', text = '', limit = 0, form = false, more = false, id = 'reviews', tight = false } = Astro.props;
+const { reviews, title = 'Відгуки клієнтів', text = '', limit = 0, form = false, more = false, id = 'reviews', tight = false, lang = 'uk' } = Astro.props;
+const t = T[lang];
 const list = limit ? reviews.slice(0, limit) : reviews;
 const turnstileKey = env.TURNSTILE_SITE_KEY ?? '';
 ---
@@ -25,8 +28,8 @@ const turnstileKey = env.TURNSTILE_SITE_KEY ?? '';
       {list.map((r) => (
         <figure class="card-i rv">
           <div class="rv-top">
-            <span class="rv-stars" aria-label={`Оцінка ${r.rating} з 5`}>{'★'.repeat(r.rating)}<span>{'★'.repeat(5 - r.rating)}</span></span>
-            <span class="rv-date">{reviewDate(r.date)}</span>
+            <span class="rv-stars" aria-label={t.rating(r.rating)}>{'★'.repeat(r.rating)}<span>{'★'.repeat(5 - r.rating)}</span></span>
+            <span class="rv-date">{reviewDate(r.date, lang)}</span>
           </div>
           <blockquote><p>{r.text}</p></blockquote>
           <figcaption class="meta">
@@ -37,8 +40,8 @@ const turnstileKey = env.TURNSTILE_SITE_KEY ?? '';
       ))}
     </div>
     <div class="rv-actions">
-      {more && <a class="btn btn-ink" href="/vidguky/">Усі відгуки</a>}
-      <a class="btn btn-ghost" href={MAPS_REVIEWS_URL} target="_blank" rel="noopener">Відгуки в Google Картах</a>
+      {more && <a class="btn btn-ink" href="/vidguky/">{t.allReviews}</a>}
+      <a class="btn btn-ghost" href={MAPS_REVIEWS_URL} target="_blank" rel="noopener">{t.mapsReviews}</a>
     </div>
 
     {form && (

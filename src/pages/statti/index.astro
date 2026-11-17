@@ -2,24 +2,30 @@
 import Base from '../../layouts/Base.astro';
 import Photo from '../../components/Photo.astro';
 import { breadcrumbLd, loadSite } from '../../lib/site';
-import { ARTICLES } from '../../lib/articles';
+import { ALL_ARTICLES } from '../../lib/articles';
 import { reviewDate } from '../../lib/reviews';
 
 const { settings, nextFree, photos } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
-const title = `Статті про ремонт і обслуговування Tesla | ${settings.name}`;
-const description = 'Корисні статті для власників Tesla: перевірка батареї, ходова, тепловий насос, гальма, зарядка авто зі США в Україні.';
+const groups: [string, typeof ALL_ARTICLES][] = [
+  ['Tesla та електромобілі', ALL_ARTICLES.filter((a) => a.category !== 'general')],
+  ['Обслуговування будь-яких авто', ALL_ARTICLES.filter((a) => a.category === 'general')],
+];
+const title = `Статті про ремонт Tesla та обслуговування авто | ${settings.name}`;
+const description = 'Корисні статті для власників авто й Tesla: батарея, ходова, гальма, шини, кондиціонер, ТО, зарядка Tesla зі США. Автосервіс у Києві, Нивки.';
 ---
 <Base settings={settings} title={title} description={description} nextFree={nextFree}
   jsonLd={[breadcrumbLd(origin, [['Головна', '/'], ['Статті', '/statti/']])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Статті</span></nav>
-    <h1>Статті для власників Tesla</h1>
+    <h1>Статті для власників авто</h1>
     <p class="lead">Пояснюємо типові проблеми простими словами: що ламається, чому і як не переплатити за ремонт.</p>
   </div></div>
   <div class="page-body"><div class="wrap">
+    {groups.map(([g, list]) => (<>
+    <h2 class="art-group">{g}</h2>
     <div class="cards">
-      {ARTICLES.map((a) => (
+      {list.map((a) => (
         <a class="card-i" href={`/statti/${a.slug}/`}>
           <Photo photos={photos} slot={`article-${a.slug}`} alt={a.title} />
           <h3>{a.title}</h3>
@@ -28,5 +34,7 @@ const description = 'Корисні статті для власників Tesla
         </a>
       ))}
     </div>
+    </>))}
   </div></div>
+<style>.art-group{font:600 26px/1.2 var(--display);letter-spacing:-.02em;margin:8px 0 20px}.cards+.art-group{margin-top:48px}</style>
 </Base>

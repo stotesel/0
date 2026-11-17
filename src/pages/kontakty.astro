@@ -13,7 +13,7 @@ const title = `Контакти ${settings.name}: автосервіс і шин
 const description = `${settings.name}: ${addressLine(settings)}${d.length ? ` (${d.join(', ')})` : ''}. ${settings.hoursText}. Телефон ${settings.phone}. Маршрут у Google Maps і Waze.`;
 const directions = settings.directions?.trim() ? (marked.parse(settings.directions) as string) : '';
 ---
-<Base settings={settings} title={title} description={description} nextFree={nextFree}
+<Base settings={settings} title={title} description={description} nextFree={nextFree} alt="/ru/kontakty/"
   jsonLd={[autoRepairLd(settings, services, origin), breadcrumbLd(origin, [['Головна', '/'], ['Контакти', '/kontakty/']])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Контакти</span></nav>

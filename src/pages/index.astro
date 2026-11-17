@@ -14,6 +14,6 @@ if (faq?.data.items?.length) jsonLd.push(faqLd(faq.data.items));
 // Як у макеті: перша велика секція після hero має повний відступ, наступні стиснуті.
 const firstFull = visible.findIndex((b) => !['hero', 'brands'].includes(b.type));
 ---
-<Base settings={settings} title={settings.seoTitle} description={settings.seoDescription} nextFree={nextFree} jsonLd={jsonLd}>
+<Base settings={settings} title={settings.seoTitle} description={settings.seoDescription} nextFree={nextFree} jsonLd={jsonLd} alt="/ru/">
   {visible.map((block, i) => <Block block={block} settings={settings} services={services} reviews={shown} tight={i > firstFull} />)}
 </Base>

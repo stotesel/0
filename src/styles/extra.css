@@ -186,3 +186,9 @@ button[disabled]{opacity:.6;cursor:progress}
 .rv-msg{min-height:1.4em;margin-bottom:12px;font-size:15px}
 .rv-msg.bad{color:#C0341D}
 @media (max-width:600px){.rv-form{padding:22px}}
+
+/* ---------- Перемикач мов ---------- */
+.lang-sw{flex:none;font-weight:700;font-size:13px;letter-spacing:.02em;text-decoration:none;padding:8px 11px;border-radius:999px;background:var(--chalk);color:var(--ink-soft)}
+.lang-sw:hover{color:var(--ink)}
+@media (max-width:1060px){.lang-sw{margin-left:auto}.top-phone{margin-left:0}}
+@media (max-width:720px){.top .burger{margin-left:8px}}

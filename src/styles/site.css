@@ -11,8 +11,8 @@
   --ok:#2BA84A;
   --r-lg:28px; --r-md:16px; --r-sm:10px;
   --wrap:1240px;
-  --display:"Unbounded", "Arial Black", sans-serif;
-  --body:"Onest", system-ui, sans-serif;
+  --display:"Unbounded Variable", "Unbounded", "Arial Black", sans-serif;
+  --body:"Onest Variable", "Onest", system-ui, sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;scroll-padding-top:90px}

@@ -27,9 +27,13 @@ export function normTime(t: string): string | null {
   return `${m[1].padStart(2, '0')}:${m[2]}`;
 }
 
-export function dayLabel(date: string) {
+const DOW_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const MONTH_RU = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+export function dayLabel(date: string, lang: 'uk' | 'ru' = 'uk') {
   const [, m, d] = date.split('-').map(Number);
-  return { dow: DOW_SHORT[dowOf(date)], day: `${d} ${MONTH_SHORT[m - 1]}` };
+  return lang === 'ru'
+    ? { dow: DOW_RU[dowOf(date)], day: `${d} ${MONTH_RU[m - 1]}` }
+    : { dow: DOW_SHORT[dowOf(date)], day: `${d} ${MONTH_SHORT[m - 1]}` };
 }
 
 /** Слоти на найближчі дні: шаблон тижня + винятки дня − заявки. */

@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import Contacts from '../../components/Contacts.astro';
+import { addressLine, autoRepairLd, breadcrumbLd, loadSite } from '../../lib/site';
+import { ruService, ruSettings } from '../../lib/i18n';
+
+const site = await loadSite();
+const settings = ruSettings(site.settings);
+const services = site.services.map(ruService);
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const title = `Контакты ${settings.name}: автосервис и шиномонтаж — Нивки, Виноградарь`;
+const description = `${settings.name}: ${addressLine(settings)} (Нивки, Виноградарь). ${settings.hoursText}. Телефон ${settings.phone}. Маршрут в Google Maps и Waze.`;
+---
+<Base settings={settings} title={title} description={description} lang="ru" alt="/kontakty/"
+  jsonLd={[autoRepairLd(settings, services, origin), breadcrumbLd(origin, [['Главная', '/ru/'], ['Контакты', '/ru/kontakty/']])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навигация"><a href="/ru/">Главная</a><span>/</span><span>Контакты</span></nav>
+  </div></div>
+  <Contacts title="Как нас найти" settings={settings} tight heading="h1" lang="ru" />
+  <div class="page-body"><div class="wrap">
+    <div class="svc-card prose">
+      <h2>Как доехать до СТО</h2>
+      <p>{settings.name} находится в Подольском районе Киева по адресу ул. Ивана Выговского, 9 (бывшая улица Маршала Гречко), между Нивками и Виноградарем, недалеко от перекрёстка с улицей Виктора Некрасова. Рядом с сервисом супермаркеты АТБ и «Влада», поэтому ориентироваться легко даже тем, кто едет впервые. Водителям с Нивок, Виноградаря, Сырца и Куреневки до нас несколько минут: удобно оставить авто на ТО или шиномонтаж и не ехать через весь город.</p>
+      <p>Удобнее всего проложить маршрут кнопкой «Маршрут в Google Maps» или «Waze» выше: метка на карте стоит по точным координатам сервиса. Если навигатор ведёт другим путём или вы не можете найти въезд, просто позвоните, и мастер подскажет дорогу.</p>
+      <h2>Перед визитом</h2>
+      <ul>
+        <li><b>Запишитесь заранее.</b> Мы работаем только по предварительной записи: под ваше время бронируем пост и мастера, поэтому не придётся ждать в очереди.</li>
+        <li><b>Приезжайте за 5–10 минут до времени записи</b>, чтобы спокойно оформить авто и обсудить, что именно беспокоит.</li>
+        <li><b>Возьмите техпаспорт</b> и, если на колёсах стоят болты-секретки, ключ к ним.</li>
+        <li><b>Опишите симптомы как можно точнее</b>: когда появляется шум или ошибка, на холодном или прогретом двигателе, на какой скорости. Это сокращает время диагностики.</li>
+      </ul>
+      <h2>Пока авто в работе</h2>
+      <p>Можно подождать в зоне отдыха с кофе и Wi‑Fi или стоять рядом с авто в цеху и видеть, что происходит. Если ремонт долгий, пришлём фото и видео в мессенджер и позвоним, когда машина будет готова.</p>
+    </div>
+  </div></div>
+</Base>

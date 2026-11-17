@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import Booking from '../../components/blocks/Booking.astro';
 import Photo from '../../components/Photo.astro';
 import { breadcrumbLd, loadSite, tel } from '../../lib/site';
-import { ARTICLES, article } from '../../lib/articles';
+import { ALL_ARTICLES, article } from '../../lib/articles';
 import { reviewDate } from '../../lib/reviews';
 
 const a = article(Astro.params.slug ?? '');
@@ -13,7 +13,7 @@ if (!a) return Astro.rewrite('/404');
 const { settings, blocks, services, nextFree, photos } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
-const others = ARTICLES.filter((x) => x.slug !== a.slug);
+const others = ALL_ARTICLES.filter((x) => x.slug !== a.slug && (x.category ?? 'tesla') === (a.category ?? 'tesla')).slice(0, 6);
 const img = photos[`article-${a.slug}`]?.url;
 const articleLd = {
   '@context': 'https://schema.org',

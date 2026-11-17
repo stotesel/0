@@ -5,8 +5,10 @@
 import type { Service, Settings } from '../../lib/types';
 import { price, tel } from '../../lib/site';
 import { defaultZones } from '../../lib/seed';
-interface Props { data: Record<string, any>; settings: Settings; services: Service[] }
-const { data: d, settings, services } = Astro.props;
+import { lp, type Lang } from '../../lib/i18n';
+interface Props { data: Record<string, any>; settings: Settings; services: Service[]; lang?: Lang }
+const { data: d, settings, services, lang = 'uk' } = Astro.props;
+const ru = lang === 'ru';
 const [brandA, brandB] = [settings.name.slice(0, 3), settings.name.slice(3)];
 const icons = [
   '<path d="M9 12l2 2 4-4"/><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
@@ -28,7 +30,7 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
 <section class="hero" style="padding-bottom:0">
   <div class="wrap">
     <div class="wordmark" aria-hidden="true">{brandA}<span class="t">{brandB}</span></div>
-    <div class="hero-tags" aria-label="Що ремонтуємо">
+    <div class="hero-tags" aria-label={ru ? 'Что ремонтируем' : 'Що ремонтуємо'}>
       {(d.tags ?? []).map((t: string) => <span>{t}</span>)}
     </div>
 
@@ -60,11 +62,11 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
         <div class="tesla-head">
           <span class="eyebrow">{d.specLabel ?? 'Спеціалізація'}</span>
           <h2>{d.specTitle ?? 'Ремонт і обслуговування Tesla'}</h2>
-          <p>{d.specText ?? 'Model S, 3, X та Y. Натисніть на вузол, щоб побачити, що ми з ним робимо.'} <a href="/servis-tesla/">Усе про сервіс Tesla</a></p>
+          <p>{d.specText ?? 'Model S, 3, X та Y. Натисніть на вузол, щоб побачити, що ми з ним робимо.'} <a href={lp(lang, '/servis-tesla/')}>{ru ? 'Всё о сервисе Tesla' : 'Усе про сервіс Tesla'}</a></p>
         </div>
 
         <div class="tesla-stage">
-          <img class="eng" src="/img/tesla-engraving.webp" width="1200" height="549" alt="Tesla, вид зверху, гравюра" fetchpriority="high">
+          <img class="eng" src="/img/tesla-engraving.webp" srcset="/img/tesla-engraving-700.webp 700w, /img/tesla-engraving.webp 1200w" sizes="(max-width: 760px) 100vw, 640px" width="1200" height="549" alt={ru ? 'Tesla, вид сверху, гравюра' : 'Tesla, вид зверху, гравюра'} fetchpriority="high">
           <div class="zlayers" aria-hidden="true">
             <img class="zl zl-glass" src="/img/tesla-glass.webp" width="1200" height="549" alt="" loading="lazy">
             <svg viewBox="0 0 1200 549">
@@ -104,7 +106,7 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
           ))}
         </div>
 
-        <div class="tesla-chips" role="group" aria-label="Вузли автомобіля">
+        <div class="tesla-chips" role="group" aria-label={ru ? 'Узлы автомобиля' : 'Вузли автомобіля'}>
           {zones.map((z, i) => <button type="button" data-i={i} data-part={z.part} aria-pressed={i === 0 ? 'true' : 'false'}><b>{i + 1}</b>{z.title}</button>)}
         </div>
 
@@ -117,14 +119,14 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
               </div>
               {z.service && (
                 <div class="tesla-cost">
-                  <span>{z.service.price_from > 0 ? <><small>від</small>{price(z.service.price_from)} грн</> : <small>ціна за запитом</small>}</span>
-                  <a href={`/${z.service.slug}/`}>Детальніше</a>
+                  <span>{z.service.price_from > 0 ? <><small>{ru ? 'от' : 'від'}</small>{price(z.service.price_from)} грн</> : <small>{ru ? 'цена по запросу' : 'ціна за запитом'}</small>}</span>
+                  <a href={lp(lang, `/${z.service.slug}/`)}>{ru ? 'Подробнее' : 'Детальніше'}</a>
                 </div>
               )}
             </div>
           ))}
         </div>
-        <p class="bay-note">{d.note ?? 'Також обслуговуємо бензинові, дизельні та гібридні авто.'} <a href="#services">Усі послуги й ціни</a></p>
+        <p class="bay-note">{d.note ?? 'Також обслуговуємо бензинові, дизельні та гібридні авто.'} <a href="#services">{ru ? 'Все услуги и цены' : 'Усі послуги й ціни'}</a></p>
       </div>
     </div>
   </div>

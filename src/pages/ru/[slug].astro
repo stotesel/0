@@ -1,0 +1,70 @@
+---
+// Русская страница услуги: /ru/planove-to/ и т. д. Цена — из базы, тексты — src/lib/ru/services.ts.
+import { marked } from 'marked';
+import Base from '../../layouts/Base.astro';
+import Booking from '../../components/blocks/Booking.astro';
+import { areaServed, breadcrumbLd, loadSite, price, tel } from '../../lib/site';
+import { ruService, ruSettings } from '../../lib/i18n';
+import { RU_SERVICES } from '../../lib/ru/services';
+import { RU_HOME } from '../../lib/ru/home';
+import { RU_TESLA_MODELS } from '../../lib/ru/tesla';
+import { TESLA_MODELS } from '../../lib/teslaModels';
+
+const site = await loadSite();
+const raw = site.services.find((x) => x.slug === Astro.params.slug);
+if (!raw || !RU_SERVICES[raw.slug]) return Astro.rewrite('/404');
+
+const settings = ruSettings(site.settings);
+const services = site.services.map(ruService);
+const s = ruService(raw);
+const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
+const hasPrice = s.price_from > 0;
+const priceStr = hasPrice ? `от ${price(s.price_from)} грн` : 'цена по запросу';
+const title = `${s.title} в Киеве — ${priceStr} | ${settings.name}`;
+const lc = (t: string) => (/^[A-ZА-ЯЁ]{2}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
+const description = `${s.title} в автосервисе ${settings.name} (Нивки, Виноградарь): ${lc(s.summary)}. ${hasPrice ? `От ${price(s.price_from)} грн, ` : ''}${s.duration}. Запись онлайн или по телефону ${settings.phone}.`;
+const models = TESLA_MODELS.filter((m) => s.kind === 'ev' || m.services.includes(s.slug));
+const serviceLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: s.title,
+  description: s.summary,
+  inLanguage: 'ru',
+  areaServed: areaServed(settings),
+  provider: { '@id': `${origin}/#autorepair` },
+  ...(hasPrice ? { offers: { '@type': 'Offer', priceCurrency: 'UAH', priceSpecification: { '@type': 'PriceSpecification', minPrice: s.price_from, priceCurrency: 'UAH' } } } : {}),
+};
+---
+<Base settings={settings} title={title} description={description} lang="ru" alt={`/${s.slug}/`}
+  jsonLd={[serviceLd, breadcrumbLd(origin, [['Главная', '/ru/'], ['Услуги', '/ru/#services'], [s.title, `/ru/${s.slug}/`]])]}>
+  <div class="page-head"><div class="wrap">
+    <nav class="crumbs" aria-label="Навигация"><a href="/ru/">Главная</a><span>/</span><a href="/ru/#services">Услуги</a><span>/</span><span>{s.title}</span></nav>
+    <h1>{s.title}</h1>
+    <p class="lead">{s.summary}</p>
+  </div></div>
+  <div class="page-body"><div class="wrap svc">
+    <div class="svc-card">
+      {s.includes.length > 0 && (<><h2>Что входит</h2><ul>{s.includes.map((x) => <li>{x}</li>)}</ul></>)}
+      <div class="prose" set:html={marked.parse(s.body)} />
+    </div>
+    <aside class="svc-side">
+      <div><div class="k">Стоимость работы</div><div class="v">{hasPrice ? <><small>от</small>{price(s.price_from)} грн</> : 'По запросу'}</div></div>
+      <div><div class="k">Длительность</div><div class="v">{s.duration}</div></div>
+      <p class="k">{hasPrice ? 'Цена без запчастей. Точную сумму фиксируем в смете до начала работ.' : 'Стоимость зависит от авто и размера колёс. Назовём точную сумму по телефону или при записи.'}</p>
+      <a class="btn btn-hv" href="#book">Выбрать время визита</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+    </aside>
+  </div></div>
+  {models.length > 0 && (
+    <div class="page-body"><div class="wrap">
+      <h2 class="svc-related">{s.title}: Tesla</h2>
+      <div class="cards">
+        {models.map((m) => <a class="card-i" href={`/ru/servis-tesla/${m.slug}/`}><h3>Tesla {m.name}</h3><p>{RU_TESLA_MODELS[m.slug].lead}</p></a>)}
+      </div>
+    </div></div>
+  )}
+  <Booking data={RU_HOME.booking} settings={settings} services={services} tight preselect={s.title} lang="ru" />
+</Base>
+<style>
+  .svc-related{font:600 26px/1.2 var(--display);letter-spacing:-.02em;margin-bottom:20px}
+</style>
