@@ -4,18 +4,18 @@ import Base from '../layouts/Base.astro';
 import Photo from '../components/Photo.astro';
 import Reviews from '../components/Reviews.astro';
 import Booking from '../components/blocks/Booking.astro';
-import { breadcrumbLd, districtPhrase, loadSite, tel } from '../lib/site';
+import { breadcrumbLd, districtList, loadSite, tel } from '../lib/site';
 import { approved } from '../lib/reviews';
 import { PHOTO_SLOTS } from '../lib/photos';
 
 const { settings, blocks, services, nextFree, photos, about, reviews } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
-const near = districtPhrase(settings);
+const near = districtList(settings).join(', ');
 const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
 const list = approved(reviews);
 const avg = list.length ? (list.reduce((s, r) => s + r.rating, 0) / list.length).toFixed(1).replace('.', ',') : '';
 const slots = PHOTO_SLOTS.filter((s) => s.page === '/pro-nas/');
-const title = `Про ${settings.name}: автосервіс і сервіс Tesla${near ? ` між ${near}` : ''}`;
+const title = `Про ${settings.name}: автосервіс і сервіс Tesla у Києві`;
 const description = `${settings.name} — автосервіс у Києві: Tesla, електромобілі, гібриди, бензин і дизель. Як ми працюємо, фото сервісу, відгуки. ${settings.street}.`;
 ---
 <Base settings={settings} title={title} description={description} nextFree={nextFree}
@@ -23,7 +23,7 @@ const description = `${settings.name} — автосервіс у Києві: Te
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Про нас</span></nav>
     <h1>Про {settings.name}</h1>
-    <p class="lead">Автосервіс у Києві{near ? ` між ${near}` : ''}. Tesla та інші електромобілі, гібриди, бензин і дизель.{avg && ` ${avg} з 5 у відгуках клієнтів.`}</p>
+    <p class="lead">Автосервіс у Києві{near ? ` поруч із районами ${near}` : ''}. Tesla та інші електромобілі, гібриди, бензин і дизель.{avg && ` ${avg} з 5 у відгуках клієнтів.`}</p>
   </div></div>
 
   <div class="page-body"><div class="wrap">

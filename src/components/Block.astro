@@ -6,6 +6,7 @@ import Booking from './blocks/Booking.astro';
 import Contacts from './Contacts.astro';
 import PriceList from './PriceList.astro';
 import Reviews from './Reviews.astro';
+import { ALL_ARTICLES } from '../lib/articles';
 import type { Block, Review, Service, Settings } from '../lib/types';
 
 interface Props { block: Block; settings: Settings; services: Service[]; tight: boolean; reviews?: Review[] }
@@ -87,6 +88,20 @@ const brands = block.type === 'brands' ? [...(d.items ?? []), ...(d.items ?? [])
 
 {block.type === 'reviews' && reviews.length > 0 && (
   <Reviews reviews={reviews} title={d.title} text={d.text} limit={6} more id={`b-${block.id}`} tight={tight} />
+)}
+
+{block.type === 'articles' && (
+  <section id={`b-${block.id}`} style={pad}>
+    <div class="wrap">
+      <div class="sec-head"><h2>{d.title}</h2>{d.text && <p>{d.text}</p>}</div>
+      <div class="cards">
+        {[...ALL_ARTICLES.filter((a) => a.category !== 'general').slice(0, 3), ...ALL_ARTICLES.filter((a) => a.category === 'general').slice(0, 3)].map((a) => (
+          <a class="card-i" href={`/statti/${a.slug}/`}><h3>{a.title}</h3><p>{a.lead}</p></a>
+        ))}
+      </div>
+      <div class="rv-actions"><a class="btn btn-ink" href="/statti/">{d.button || 'Усі статті'}</a></div>
+    </div>
+  </section>
 )}
 
 {block.type === 'banner' && (

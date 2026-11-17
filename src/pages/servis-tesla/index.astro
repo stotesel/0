@@ -7,7 +7,7 @@ import Reviews from '../../components/Reviews.astro';
 import { TESLA_MODELS } from '../../lib/teslaModels';
 import { ALL_ARTICLES } from '../../lib/articles';
 import { teslaReviews } from '../../lib/reviews';
-import { PRICE_ON_REQUEST, areaServed, districtPhrase, breadcrumbLd, faqLd, loadSite, price, tel } from '../../lib/site';
+import { PRICE_ON_REQUEST, areaServed, districtPhrase, titleNear, breadcrumbLd, faqLd, loadSite, price, tel } from '../../lib/site';
 
 const { settings, blocks, services, nextFree, reviews } = await loadSite();
 const tReviews = teslaReviews(reviews);
@@ -20,7 +20,7 @@ const extra = ['kompiuterna-diahnostyka', 'remont-khodovoi', 'halmivna-systema',
 const related = services.filter((s) => s.kind === 'ev' || extra.includes(s.slug));
 const minPrice = related.length ? Math.min(...related.map((s) => s.price_from).filter((n) => n > 0)) : 0;
 
-const near = districtPhrase(settings, ' і ');
+const near = titleNear(settings);
 const title = `Ремонт і сервіс Tesla у ${city}${near ? ` — ${near}` : ''} | ${settings.name}`;
 const description = `Ремонт і ТО Tesla Model S, 3, X, Y у ${city}${near ? ` (${near})` : ''}: діагностика батареї, охолодження, тепловий насос, зарядка, ходова й гальма. ${settings.street}. Запис: ${settings.phone}.`;
 

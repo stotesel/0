@@ -5,7 +5,7 @@ import Base from '../../layouts/Base.astro';
 import Booking from '../../components/blocks/Booking.astro';
 import Photo from '../../components/Photo.astro';
 import Reviews from '../../components/Reviews.astro';
-import { PRICE_ON_REQUEST, areaServed, breadcrumbLd, districtPhrase, faqLd, loadSite, price, tel } from '../../lib/site';
+import { PRICE_ON_REQUEST, areaServed, breadcrumbLd, districtList, faqLd, loadSite, price, tel, titleNear } from '../../lib/site';
 import { teslaReviews } from '../../lib/reviews';
 import { TESLA_MODELS, teslaModel } from '../../lib/teslaModels';
 import { articlesFor } from '../../lib/articles';
@@ -16,7 +16,7 @@ if (!m) return Astro.rewrite('/404');
 const { settings, blocks, services, nextFree, reviews, photos } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const city = settings.city === 'Київ' ? 'Києві' : settings.city;
-const near = districtPhrase(settings, ' і ');
+const near = titleNear(settings);
 const booking = blocks.find((b) => b.type === 'booking')?.data ?? {};
 const related = m.services.map((slug) => services.find((s) => s.slug === slug)).filter((s) => !!s);
 const minPrice = Math.min(...related.map((s) => s.price_from).filter((n) => n > 0));
@@ -61,7 +61,7 @@ const serviceLd = {
           <tbody>{m.maintenance.map(([a, b]) => <tr><td>{a}</td><td>{b}</td></tr>)}</tbody>
         </table>
         <h2>Де нас знайти</h2>
-        <p>{settings.name}: {settings.street}, {settings.city}{near ? `, між ${districtPhrase(settings)}` : ''}. Працюємо за записом, тож авто не чекає в черзі.</p>
+        <p>{settings.name}: {settings.street}, {settings.city}{districtList(settings).length ? `, поруч із районами ${districtList(settings).join(', ')}` : ''}. Працюємо за записом, тож авто не чекає в черзі.</p>
       </div>
     </div>
     <aside class="svc-side">

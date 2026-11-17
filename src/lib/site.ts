@@ -22,6 +22,15 @@ export const districtPhrase = (s: Settings, sep = ' та ') => {
   const d = districtList(s);
   return d.length < 2 ? d.join('') : `${d.slice(0, -1).join(', ')}${sep}${d[d.length - 1]}`;
 };
+/** Для заголовків: лише перші два райони, щоб title не був задовгим. «Нивки і Виноградар». */
+export const titleNear = (s: Settings, sep = ' і ') => districtList(s).slice(0, 2).join(sep);
+/** Обрізає опис до ~160 символів по межі слова, щоб Google не різав його сам посеред фрази. */
+export function clip(text: string, max = 160) {
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(' ')).replace(/[,.;:—–-]+$/, '')}…`;
+}
 /** Місто плюс райони для schema.org areaServed. */
 export const areaServed = (s: Settings) => {
   const d = districtList(s);
@@ -58,6 +67,10 @@ export function autoRepairLd(s: Settings, services: Service[], origin: string) {
     ...(s.email ? { email: s.email } : {}),
     priceRange: s.priceRange,
     areaServed: areaServed(s),
+    // Зв'язок сайту з точкою в Google Картах
+    hasMap: 'https://maps.google.com/?cid=13948839784886276017',
+    sameAs: ['https://maps.google.com/?cid=13948839784886276017'],
+    knowsLanguage: ['uk', 'ru'],
     address: {
       '@type': 'PostalAddress',
       streetAddress: s.street,

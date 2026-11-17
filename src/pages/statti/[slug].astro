@@ -29,7 +29,7 @@ const articleLd = {
   publisher: { '@id': `${origin}/#autorepair` },
 };
 ---
-<Base settings={settings} title={`${a.seoTitle} | ${settings.name}`} description={a.description} nextFree={nextFree}
+<Base ogType="article" settings={settings} title={a.seoTitle.length + settings.name.length + 3 <= 65 ? `${a.seoTitle} | ${settings.name}` : a.seoTitle} description={a.description} nextFree={nextFree}
   jsonLd={[articleLd, breadcrumbLd(origin, [['Головна', '/'], ['Статті', '/statti/'], [a.title, `/statti/${a.slug}/`]])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><a href="/statti/">Статті</a><span>/</span><span>{a.title}</span></nav>

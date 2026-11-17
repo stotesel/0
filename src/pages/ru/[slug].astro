@@ -22,7 +22,7 @@ const hasPrice = s.price_from > 0;
 const priceStr = hasPrice ? `от ${price(s.price_from)} грн` : 'цена по запросу';
 const title = `${s.title} в Киеве — ${priceStr} | ${settings.name}`;
 const lc = (t: string) => (/^[A-ZА-ЯЁ]{2}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1));
-const description = `${s.title} в автосервисе ${settings.name} (Нивки, Виноградарь): ${lc(s.summary)}. ${hasPrice ? `От ${price(s.price_from)} грн, ` : ''}${s.duration}. Запись онлайн или по телефону ${settings.phone}.`;
+const description = `${s.title} в автосервисе ${settings.name} (${settings.districts}): ${lc(s.summary)}. ${hasPrice ? `От ${price(s.price_from)} грн, ` : ''}${s.duration}. Запись онлайн или по телефону ${settings.phone}.`;
 const models = TESLA_MODELS.filter((m) => s.kind === 'ev' || m.services.includes(s.slug));
 const serviceLd = {
   '@context': 'https://schema.org',

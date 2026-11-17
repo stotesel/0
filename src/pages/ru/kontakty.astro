@@ -9,7 +9,7 @@ const settings = ruSettings(site.settings);
 const services = site.services.map(ruService);
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const title = `Контакты ${settings.name}: автосервис и шиномонтаж — Нивки, Виноградарь`;
-const description = `${settings.name}: ${addressLine(settings)} (Нивки, Виноградарь). ${settings.hoursText}. Телефон ${settings.phone}. Маршрут в Google Maps и Waze.`;
+const description = `${settings.name}: ${addressLine(settings)} (${settings.districts}). ${settings.hoursText}. Телефон ${settings.phone}. Маршрут в Google Maps и Waze.`;
 ---
 <Base settings={settings} title={title} description={description} lang="ru" alt="/kontakty/"
   jsonLd={[autoRepairLd(settings, services, origin), breadcrumbLd(origin, [['Главная', '/ru/'], ['Контакты', '/ru/kontakty/']])]}>

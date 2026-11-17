@@ -26,7 +26,7 @@ export const ruSettings = (s: Settings): Settings => ({
   ...s,
   city: s.city === 'Київ' ? 'Киев' : s.city,
   street: s.street.replace('вул. Івана Виговського', 'ул. Ивана Выговского'),
-  districts: s.districts.replace('Виноградар', 'Виноградарь'),
+  districts: s.districts.replace('Виноградар', 'Виноградарь').replace('Сирець', 'Сырец'),
   phoneNote: 'по предварительной записи',
   hoursNote: 'Только по предварительной записи',
   footerText: 'Автосервис и шиномонтаж между Нивками и Виноградарем: ремонт бензиновых, дизельных, гибридных авто и электромобилей в Киеве',

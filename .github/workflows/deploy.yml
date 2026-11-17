@@ -37,3 +37,14 @@ jobs:
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
       - run: npx wrangler deploy
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+      # IndexNow: повідомляємо Bing, Yandex та інші пошуковики про всі сторінки з sitemap.
+      # Ключ публічний за задумом протоколу, файл лежить у public/cbd57934efbe2bdbf7cba4aa3b9b71fd.txt.
+      - name: IndexNow
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        continue-on-error: true
+        run: |
+          sleep 20
+          urls=$(curl -s https://stotesel.com.ua/sitemap.xml | grep -o '<loc>[^<]*' | sed 's/<loc>//' | jq -R . | jq -s -c .)
+          curl -s -o /dev/null -w "IndexNow %{http_code}\n" -X POST https://api.indexnow.org/indexnow \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            -d "{\"host\":\"stotesel.com.ua\",\"key\":\"cbd57934efbe2bdbf7cba4aa3b9b71fd\",\"keyLocation\":\"https://stotesel.com.ua/cbd57934efbe2bdbf7cba4aa3b9b71fd.txt\",\"urlList\":$urls}"

@@ -186,7 +186,7 @@ const SETTINGS_FIELDS: Field[] = [
 ];
 const BLOCK_NAMES: Record<string, string> = {
   hero: 'Перший екран', brands: 'Стрічка марок', services: 'Послуги і ціни', process: 'Як проходить візит', why: 'Чому ми',
-  booking: 'Запис', faq: 'Часті питання', contacts: 'Контакти і карта', reviews: 'Відгуки', text: 'Текстовий блок', banner: 'Банер',
+  booking: 'Запис', faq: 'Часті питання', contacts: 'Контакти і карта', reviews: 'Відгуки', articles: 'Статті', text: 'Текстовий блок', banner: 'Банер',
 };
 // Легкий фон картки заявки за статусом: нова лишається білою
 const STATUS_TINT: Record<Booking['status'], string> = {

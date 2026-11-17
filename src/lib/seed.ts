@@ -214,6 +214,7 @@ export const seedSchedule: Schedule = {
 export const blockTemplates: Record<string, { label: string; data: Record<string, any> }> = {
   text: { label: 'Текстовий блок', data: { title: 'Заголовок', body: 'Текст блоку. Підтримується Markdown.' } },
   banner: { label: 'Банер з кнопкою', data: { title: 'Заголовок банера', text: 'Опишіть пропозицію.', button: 'Записатися', link: '/#book' } },
+  articles: { label: 'Статті', data: { title: 'Корисні статті', text: 'Пояснюємо типові поломки простими словами: що ламається, чому і як не переплатити.', button: 'Усі статті' } },
   reviews: { label: 'Відгуки', data: { title: 'Відгуки клієнтів', text: 'Що пишуть клієнти в Google Картах і на сайті.' } },
 };
 

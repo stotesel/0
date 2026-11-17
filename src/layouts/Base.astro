@@ -5,7 +5,7 @@ import '@fontsource-variable/unbounded';
 import '../styles/site.css';
 import '../styles/extra.css';
 import type { Settings } from '../lib/types';
-import { tel } from '../lib/site';
+import { clip, tel } from '../lib/site';
 import { T, type Lang } from '../lib/i18n';
 
 interface Props {
@@ -18,8 +18,10 @@ interface Props {
   lang?: Lang;
   /** Та сама сторінка іншою мовою (шлях). Є лише там, де є переклад: дає hreflang і перемикач мов. */
   alt?: string;
+  ogType?: 'website' | 'article';
 }
-const { settings, title, description, nextFree = '', jsonLd = [], noindex = false, lang = 'uk', alt = '' } = Astro.props;
+const { settings, title, nextFree = '', jsonLd = [], noindex = false, lang = 'uk', alt = '', ogType = 'website' } = Astro.props;
+const description = clip(Astro.props.description);
 const t = T[lang];
 const home = lang === 'ru' ? '/ru/' : '/';
 const altHref = alt || (lang === 'ru' ? '/' : '/ru/');
@@ -50,7 +52,7 @@ const nav = t.nav;
 {alt && <link rel="alternate" hreflang="x-default" href={`${origin}${ukPath}`}>}
 {noindex && <meta name="robots" content="noindex, nofollow">}
 {gsv && <meta name="google-site-verification" content={gsv}>}
-<meta property="og:type" content="website">
+<meta property="og:type" content={ogType}>
 <meta property="og:locale" content={lang === 'ru' ? 'ru_UA' : 'uk_UA'}>
 <meta property="og:site_name" content={settings.name}>
 <meta property="og:title" content={title}>

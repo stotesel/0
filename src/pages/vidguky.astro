@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Reviews from '../components/Reviews.astro';
-import { breadcrumbLd, districtPhrase, loadSite } from '../lib/site';
+import { breadcrumbLd, loadSite } from '../lib/site';
 import { approved } from '../lib/reviews';
 
 const { settings, reviews, nextFree } = await loadSite();
@@ -9,8 +9,7 @@ const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const list = approved(reviews);
 const avg = list.length ? list.reduce((s, r) => s + r.rating, 0) / list.length : 0;
 const avgStr = avg.toFixed(1).replace('.', ',');
-const near = districtPhrase(settings);
-const title = `Відгуки про ${settings.name} — автосервіс і сервіс Tesla${near ? `, ${near}` : ''}`;
+const title = `Відгуки про ${settings.name}: автосервіс і сервіс Tesla у Києві`;
 const description = `Відгуки клієнтів про ${settings.name}: ремонт Tesla та інших авто, ТО, ходова. ${list.length ? `Середня оцінка ${avgStr} з 5. ` : ''}${settings.street}, ${settings.city}.`;
 ---
 <Base settings={settings} title={title} description={description} nextFree={nextFree}
