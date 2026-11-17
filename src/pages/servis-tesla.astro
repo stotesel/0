@@ -3,7 +3,7 @@
 import { marked } from 'marked';
 import Base from '../layouts/Base.astro';
 import Booking from '../components/blocks/Booking.astro';
-import { PRICE_ON_REQUEST, areaServed, breadcrumbLd, faqLd, loadSite, price, tel } from '../lib/site';
+import { PRICE_ON_REQUEST, areaServed, districtPhrase, breadcrumbLd, faqLd, loadSite, price, tel } from '../lib/site';
 
 const { settings, blocks, services, nextFree } = await loadSite();
 const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
@@ -15,8 +15,9 @@ const extra = ['kompiuterna-diahnostyka', 'remont-khodovoi', 'halmivna-systema',
 const related = services.filter((s) => s.kind === 'ev' || extra.includes(s.slug));
 const minPrice = related.length ? Math.min(...related.map((s) => s.price_from).filter((n) => n > 0)) : 0;
 
-const title = `Сервіс і ремонт Tesla у ${city} — Model S, 3, X, Y | ${settings.name}`;
-const description = `Ремонт і обслуговування Tesla Model S, 3, X та Y у ${city}: діагностика батареї, охолодження, тепловий насос, зарядка, ходова й гальма. Робота з високою напругою. Запис: ${settings.phone}.`;
+const near = districtPhrase(settings, ' і ');
+const title = `Ремонт і сервіс Tesla у ${city}${near ? ` — ${near}` : ''} | ${settings.name}`;
+const description = `Ремонт і ТО Tesla Model S, 3, X, Y у ${city}${near ? ` (${near})` : ''}: діагностика батареї, охолодження, тепловий насос, зарядка, ходова й гальма. ${settings.street}. Запис: ${settings.phone}.`;
 
 const body = `## Сервіс Tesla без поїздки за кордон
 
@@ -35,6 +36,21 @@ const body = `## Сервіс Tesla без поїздки за кордон
 - **Низьковольтна мережа.** Акумулятор 12 В або 16 В, помилки, пов'язані з живленням, розряд на стоянці.
 - **3D розвал-сходження** за даними виробника, щоб дорогі шини Tesla зношувалися рівно.
 
+## Регламентне ТО Tesla
+
+Оливи й свічок у Tesla немає, але планове обслуговування все одно потрібне. Орієнтуємося на рекомендації Tesla та українські умови: зимові реагенти, ями й перепади температур.
+
+| Що робимо | Як часто |
+|---|---|
+| Салонний фільтр (Model 3 і Y) | раз на 2 роки |
+| HEPA-фільтр (Model S, X, Y, якщо є) | раз на 3 роки |
+| Перевірка гальмівної рідини | раз на 4 роки |
+| Очищення й змащування супортів | щороку перед зимою |
+| Перестановка коліс | кожні 10 000 км |
+| Обслуговування кондиціонера | раз на 2–3 роки або за симптомами |
+
+Під час ТО оглядаємо підвіску й гальма та кажемо, що варто запланувати наперед.
+
 ## Типові звернення за моделями
 
 **Model S і Model X.** Стукіт і скрип передньої підвіски, помилки пневмопідвіски, деградація старих батарей, робота кондиціонера й охолодження.
@@ -48,6 +64,10 @@ const body = `## Сервіс Tesla без поїздки за кордон
 3. **Кошторис до старту робіт.** Ділимо роботи на термінові та ті, що можуть зачекати. Без вашого погодження нічого не починаємо.
 4. **Ремонт і видача.** Повертаємо старі деталі, щоб було видно, що замінили й чому.
 
+## Ремонт Tesla на Нивках і Виноградарі
+
+${settings.name} розташований за адресою **${settings.street}** (колишня Маршала Гречка), між Нивками та Виноградарем. До нас зручно їхати з Подолу, Шевченківського та Святошинського районів, із Сирця та Мінського масиву. Приїжджайте у призначений час, без черги.
+
 ## Безпека
 
 Перед кожною роботою з високовольтною системою виконуємо процедуру безпечного знеструмлення, працюємо ізольованим інструментом і в засобах захисту. Це стосується не лише батареї, а й компресора кондиціонера, зарядного порту та кабелів приводу.
@@ -57,6 +77,7 @@ const body = `## Сервіс Tesla без поїздки за кордон
 Деталі пропонуємо у двох варіантах: оригінал Tesla або перевірений аналог, якщо такий існує для конкретного вузла. Ходові позиції привозимо від імпортерів Києва за 1–2 години, рідкісні замовляємо заздалегідь, щоб авто не простоювало на підйомнику.`;
 
 const faq = [
+  { title: 'Де відремонтувати Tesla на Нивках чи Виноградарі?', text: `У ${settings.name}: ${settings.street}, ${settings.city}, між Нивками та Виноградарем. Обслуговуємо Тесла Model S, 3, X і Y за попереднім записом, телефон ${settings.phone}.` },
   { title: 'Чи обслуговуєте Tesla, привезені зі США?', text: 'Так. Більшість Tesla в Україні привезені зі США та Канади. Ми працюємо з ними так само, як з європейськими, і допомагаємо з питаннями зарядки: перевіряємо порт і підбираємо безпечні адаптери для українських станцій.' },
   { title: 'Можна перевірити батарею Tesla перед купівлею?', text: `Так. Діагностика показує залишкову ємність (SOH), баланс комірок і помилки системи керування батареєю. Ви отримуєте звіт, який зручно показати продавцю під час торгу. Вартість від ${price(services.find((s) => s.slug === 'diahnostyka-batarei-ev')?.price_from ?? 1500)} грн.` },
   { title: 'Чи потрібне Tesla планове ТО?', text: 'Оливи Tesla не потребує, але регулярне обслуговування все одно потрібне: заміна салонних фільтрів, перевірка гальмівної рідини, ревізія супортів, обслуговування кондиціонера, перестановка коліс і розвал-сходження. Під вашу модель і пробіг складемо перелік робіт.' },
@@ -79,7 +100,7 @@ const serviceLd = {
   jsonLd={[serviceLd, faqLd(faq), breadcrumbLd(origin, [['Головна', '/'], ['Сервіс Tesla', '/servis-tesla/']])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Сервіс Tesla</span></nav>
-    <h1>Сервіс і ремонт Tesla у {city}</h1>
+    <h1>Ремонт і сервіс Tesla у {city}{near && ` — ${near}`}</h1>
     <p class="lead">Model S, 3, X та Y. Діагностика батареї, охолодження, тепловий насос, зарядка, ходова й гальма з допуском до роботи з високою напругою.</p>
   </div></div>
 
@@ -127,4 +148,7 @@ const serviceLd = {
 
 <style>
   .svc-related{font:600 26px/1.2 var(--display);letter-spacing:-.02em;margin-bottom:20px}
+  .svc-card :global(table){width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:16px;overflow-wrap:anywhere}
+  .svc-card :global(th), .svc-card :global(td){text-align:left;padding:10px 8px;border-bottom:1px solid rgba(0,0,0,.1);vertical-align:top}
+  .svc-card :global(th){font-weight:600}
 </style>
