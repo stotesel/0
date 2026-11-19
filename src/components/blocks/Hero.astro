@@ -1,7 +1,7 @@
 ---
-// Перший екран. Ліва частина з макета stotesel.html; права: гравюра Tesla (вид зверху),
-// на якій підсвічується вибраний вузол. Вузол веде на свою послугу з ціною з бази.
-// Гравюру створює scripts/engrave.mjs з фото img/tesla-top-source.jpg.
+// Перший екран. Ліва частина з макета stotesel.html; права: 3D-модель Tesla Model 3
+// (src/scripts/tesla3d.js), на якій підсвічується вибраний вузол. Вузол веде на свою послугу з ціною з бази.
+// Плоска гравюра (scripts/engrave.mjs) лишається заставкою, поки вантажиться модель, і запасним варіантом без WebGL 2.
 import type { Service, Settings } from '../../lib/types';
 import { price, tel } from '../../lib/site';
 import { defaultZones } from '../../lib/seed';
@@ -15,17 +15,16 @@ const icons = [
   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   '<path d="M21 8l-9-5-9 5 9 5z"/><path d="M3 8v8l9 5 9-5V8"/>',
 ];
-// Частини авто, які вміє підсвічувати гравюра, і місце точки на ній (у % від розміру).
-const PARTS: Record<string, [number, number]> = {
-  battery: [48.75, 50], chassis: [18.3, 89], electronics: [72.8, 50], glass: [28, 22], charge: [4.4, 17.5], climate: [90.6, 50],
-};
+// Частини авто, які вміє підсвічувати 3D-модель (деталі й ракурси — у src/scripts/tesla3d.js).
+const PARTS = new Set(['battery', 'chassis', 'electronics', 'glass', 'charge', 'climate', 'cooling', 'tyres', 'alignment', 'maintenance']);
 type Zone = { title: string; text: string; slug: string; part: string };
-const saved = ((d.zones ?? []) as Zone[]).filter((z) => PARTS[z.part]);
-const zones = (saved.length ? saved : defaultZones).map((z) => {
+const saved = ((d.zones ?? []) as Zone[]).filter((z) => PARTS.has(z.part));
+// у збережених в адмінці вузлах можуть бути лише старі шість — нові додаємо в кінець
+const base = saved.length ? saved : defaultZones;
+const zones = [...base, ...(ru ? [] : defaultZones.filter((z) => !base.some((b) => b.part === z.part)))].map((z) => {
   const s = services.find((x) => x.slug === z.slug);
-  return { ...z, text: z.text || s?.summary || '', service: s, spot: PARTS[z.part] };
+  return { ...z, text: z.text || s?.summary || '', service: s };
 });
-const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y: 124 + Math.floor(i / 10) * 74, d: (i % 10) * 0.09 }));
 ---
 <section class="hero" style="padding-bottom:0">
   <div class="wrap">
@@ -67,43 +66,11 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
 
         <div class="tesla-stage">
           <img class="eng" src="/img/tesla-engraving.webp" srcset="/img/tesla-engraving-700.webp 700w, /img/tesla-engraving.webp 1200w" sizes="(max-width: 760px) 100vw, 640px" width="1200" height="549" alt={ru ? 'Tesla, вид сверху, гравюра' : 'Tesla, вид зверху, гравюра'} fetchpriority="high">
-          <div class="zlayers" aria-hidden="true">
-            <img class="zl zl-glass" src="/img/tesla-glass.webp" width="1200" height="549" alt="" loading="lazy">
-            <svg viewBox="0 0 1200 549">
-              <defs>
-                <pattern id="zh" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-32)"><line x1="0" y1="0" x2="0" y2="7" stroke="#F26419" stroke-width="2.4"/></pattern>
-              </defs>
-              <g class="zl zl-battery">
-                <rect class="zs" x="300" y="112" width="570" height="324" rx="20"/>
-                {cells.map((c) => <rect class="cell" x={c.x} y={c.y} width="47" height="66" rx="6" style={`animation-delay:${c.d}s`} />)}
-              </g>
-              <g class="zl zl-chassis">
-                <rect class="zs zf" x="166" y="38" width="108" height="44" rx="14"/><rect class="zs zf" x="166" y="467" width="108" height="44" rx="14"/>
-                <rect class="zs zf" x="921" y="38" width="108" height="44" rx="14"/><rect class="zs zf" x="921" y="467" width="108" height="44" rx="14"/>
-                <path class="zs" d="M220 82V467M975 82V467M220 150h46M220 399h46M975 150h-46M975 399h-46"/>
-                <circle class="zs zf" cx="220" cy="274.5" r="26"/><circle class="zs zf" cx="975" cy="274.5" r="20"/>
-              </g>
-              <g class="zl zl-electronics">
-                <rect class="zs zf" x="848" y="142" width="52" height="264" rx="16"/>
-                <rect class="zs" x="806" y="250" width="34" height="49" rx="6"/>
-                <path class="zs dash" d="M806 274.5H96M900 190C990 160 1070 118 1128 104M900 359C990 389 1070 431 1128 445"/>
-                <circle class="zd" cx="96" cy="274.5" r="8"/><circle class="zd" cx="1128" cy="104" r="8"/><circle class="zd" cx="1128" cy="445" r="8"/>
-                <circle class="zd" cx="420" cy="274.5" r="6"/><circle class="zd" cx="640" cy="274.5" r="6"/>
-              </g>
-              <g class="zl zl-charge">
-                <circle class="zs zf" cx="52" cy="96" r="17"/><circle class="ring" cx="52" cy="96" r="17"/>
-                <path class="zs dash flow" d="M42 82C22 52 -6 34 -44 26"/>
-              </g>
-              <g class="zl zl-climate">
-                <rect class="zs zf" x="1034" y="196" width="108" height="157" rx="18"/>
-                <circle class="zs" cx="1088" cy="274.5" r="40"/>
-                <path class="zs fan" d="M1088 240v69M1053.500 274.500h69M1064 250l48 49M1112 250l-48 49"/>
-              </g>
-            </svg>
-          </div>
+          <canvas class="car3d" aria-label={ru ? 'Tesla Model 3 в 3D. Потяните, чтобы повернуть; нажмите на деталь, чтобы выбрать узел.' : 'Tesla Model 3 у 3D. Потягніть, щоб повернути; натисніть на деталь, щоб вибрати вузол.'}></canvas>
           {zones.map((z, i) => (
-            <button type="button" class="hot" data-i={i} data-part={z.part} style={`left:${z.spot[0]}%;top:${z.spot[1]}%`} aria-label={z.title} aria-pressed={i === 0 ? 'true' : 'false'}>{i + 1}</button>
+            <button type="button" class="hot" data-i={i} data-part={z.part} aria-label={z.title} aria-pressed={i === 0 ? 'true' : 'false'}>{i + 1}</button>
           ))}
+          <a class="car3d-credit" href="https://sketchfab.com/3d-models/tesla-model-3-2024-36c52f3f89f6439c90310f14e8ff33f2" target="_blank" rel="noopener nofollow">3D: RBLXSupercars · CC BY 4.0</a>
         </div>
 
         <div class="tesla-chips" role="group" aria-label={ru ? 'Узлы автомобиля' : 'Вузли автомобіля'}>
@@ -137,12 +104,9 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
     const root = document.getElementById('tesla');
     const n = root.querySelectorAll('.tesla-panel').length;
     let timer = null;
-    const layers = root.querySelector('.zlayers');
     function select(i) {
       root.dataset.z = i;
-      root.dataset.part = root.querySelector(`.hot[data-i="${i}"]`).dataset.part;
-      // перезапуск анімації «проявлення» підсвітки
-      layers.classList.remove('scan'); void layers.offsetWidth; layers.classList.add('scan');
+      root.dataset.part = root.querySelector(`.hot[data-i="${i}"]`).dataset.part; // 3D-модель стежить за цим атрибутом
       root.querySelectorAll('.hot, .tesla-chips button').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
       root.querySelectorAll('.tesla-panel').forEach((p) => p.classList.toggle('on', +p.dataset.i === i));
       // активна кнопка завжди в полі зору; гортаємо лише сам ряд, а не сторінку
@@ -155,8 +119,9 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
       clearInterval(timer); // після першого вибору вузли більше не перемикаються самі
       select(+b.dataset.i);
     });
+    root.addEventListener('tesla:interact', () => clearInterval(timer)); // користувач крутить модель
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches && n > 1) {
-      timer = setInterval(() => select((+root.dataset.z + 1) % n), 3500);
+      timer = setInterval(() => select((+root.dataset.z + 1) % n), 4000);
     }
 
     /* великий напис завжди точно на всю ширину контейнера */
@@ -166,3 +131,4 @@ const cells = Array.from({ length: 40 }, (_, i) => ({ x: 312 + (i % 10) * 55, y:
     document.fonts.ready.then(fitWord);
   })();
 </script>
+<script src="../../scripts/tesla3d.js"></script>

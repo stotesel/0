@@ -23,6 +23,10 @@ export const RU_HOME = {
       { part: 'glass', slug: '', text: 'Лобовое и боковые стёкла, стеклянная крыша', title: 'Замена стёкол' },
       { part: 'charge', slug: 'zariadka-ta-bortovyi-zariadnyi', text: '', title: 'Зарядка' },
       { part: 'climate', slug: 'kondytsioner-z-teplovym-nasosom', text: '', title: 'Тепловой насос' },
+      { part: 'cooling', slug: 'okholodzhennia-batarei-ev', text: '', title: 'Охлаждение батареи' },
+      { part: 'tyres', slug: 'shynomontazh', text: '', title: 'Шиномонтаж' },
+      { part: 'alignment', slug: 'rozval-skhodzhennia', text: '', title: 'Развал-схождение' },
+      { part: 'maintenance', slug: 'planove-to', text: '', title: 'Плановое ТО' },
     ],
   },
   services: {
