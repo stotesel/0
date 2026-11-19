@@ -90,7 +90,7 @@ const LABELS: Record<string, string> = {
   offerBig: 'Знижка великим шрифтом', offerText: 'Опис знижки', callLabel: 'Підпис над телефоном', doneText: 'Текст після відправки заявки', car: 'Авто і робота',
   specLabel: 'Tesla: мітка над заголовком', specTitle: 'Tesla: заголовок', specText: 'Tesla: підпис', zones: 'Вузли на гравюрі Tesla',
   slug: 'Адреса послуги (звідти ціна й посилання), можна лишити порожньою',
-  part: 'Що підсвітити: battery, chassis, electronics, glass, charge, climate, cooling, tyres, alignment або maintenance',
+  part: 'Що підсвітити: battery, chassis, electronics, glass, charge, climate, cooling, tyres, alignment, maintenance, brakes або aircon',
 };
 const ITEM_SHAPES: Record<string, Record<string, string>> = { reviews: { title: '', car: '', text: '' } };
 

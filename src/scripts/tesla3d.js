@@ -6,6 +6,7 @@
 // Файл моделі стиснуто (EXT_meshopt_compression + KHR_mesh_quantization, без салону, який за склом не видно);
 // оригінал — TESLA/Tesla Model 3.glb. Новий part тут потрібно додати й у PARTS у Hero.astro.
 // pose: [yaw, pitch] — yaw<0 погляд спереду, cos(yaw)>0 лівий борт; pitch<0 — знизу.
+// zoom/focus (необов'язково) — наблизити камеру до дрібної деталі.
 
 const RIMS = ['rim_front_L', 'rim_front_R', 'rim_rear_L', 'rim_rear_R'];
 const TIRES = ['tire_front_L', 'tire_front_R', 'tire_rear_L', 'tire_rear_R'];
@@ -17,7 +18,10 @@ const ZONES = {
   charge: { ids: ['charge_port_door'], pose: [0.82, 0.24], at: [1.93, 0.86, 0.76] },
   climate: { ids: ['hood'], pose: [-1.12, 0.36], at: [-1.62, 0.72, 0] },
   cooling: { ids: ['bumper_front'], pose: [-1.3, 0.16], at: [-2.2, 0.38, 0.35] },
-  maintenance: { ids: ['wipers'], pose: [-1.15, 0.55], at: [-1.23, 0.88, 0.25] },
+  // під капотом (frunk) — рідини, салонний фільтр під жабо, склоочисники
+  maintenance: { ids: ['hood', 'wipers', 'bumper_front'], pose: [-1.05, 0.42], zoom: 1.7, focus: [-1.45, 0.66, 0], at: [-1.55, 0.76, 0.1] },
+  brakes: { ids: ['rim_front_L'], pose: [-0.3, 0.1], zoom: 2.7, focus: [-1.48, 0.38, 0.9], at: [-1.48, 0.34, 0.96] },
+  aircon: { ids: ['wipers', 'windshield'], pose: [-1.25, 0.48], zoom: 2.2, focus: [-1.2, 0.86, 0], at: [-1.23, 0.9, 0.3] },
   tyres: { ids: TIRES, pose: [0.6, 0.1], at: [1.39, 0.35, 0.86] },
   alignment: { ids: ['tire_front_L', 'rim_front_L', 'tire_front_R', 'rim_front_R'], pose: [-1.0, 0.14], at: [-1.48, 0.34, 0.92] },
 };
@@ -81,17 +85,17 @@ if (root && stage && canvas) {
     const prog = (vs, fs) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw Error(gl.getProgramInfoLog(p)); return p; };
     const vert = `#version 300 es
 layout(location=0) in vec3 pos;layout(location=1) in vec3 norm;layout(location=2) in vec2 uv;
-uniform vec3 rightV,upV,eyeV;uniform vec2 halfSize,pan;uniform float perspective;uniform mat4 model;
+uniform vec3 rightV,upV,eyeV;uniform vec2 halfSize,pan;uniform float perspective;uniform mat4 model;uniform vec3 ctr;
 out vec3 N;out vec3 P;out vec2 UV;
-void main(){vec3 wp=(model*vec4(pos,1)).xyz;vec3 p=wp-vec3(0,${CENTER_Y},0);float z=dot(p,eyeV);float w=1.-perspective*z;gl_Position=vec4(vec2(dot(p,rightV),dot(p,upV))/halfSize+pan*w,-z/6.,w);N=normalize(mat3(model)*norm);P=wp;UV=uv;}`;
+void main(){vec3 wp=(model*vec4(pos,1)).xyz;vec3 p=wp-ctr;float z=dot(p,eyeV);float w=1.-perspective*z;gl_Position=vec4(vec2(dot(p,rightV),dot(p,upV))/halfSize+pan*w,-z/6.,w);N=normalize(mat3(model)*norm);P=wp;UV=uv;}`;
     const flat = `#version 300 es
 precision highp float;
-uniform sampler2D tex;uniform vec3 base,eyeV;uniform float useTex,sel,part,picking,kind;
+uniform sampler2D tex;uniform vec3 base,eyeV,ctr;uniform float useTex,sel,part,picking,kind;
 in vec2 UV;in vec3 P;in vec3 N;layout(location=0) out vec4 color;layout(location=1) out vec4 info;
 void main(){if(picking>.5){color=vec4(part/255.,0,0,1);info=vec4(0);return;}
 vec3 n=normalize(N);vec3 c=mix(base,texture(tex,UV).rgb,useTex);
 float facing=clamp(abs(dot(n,eyeV)),0.,1.);
-vec3 V=normalize(eyeV*9.-(P-vec3(0,${CENTER_Y},0)));vec3 r=reflect(-V,n);
+vec3 V=normalize(eyeV*9.-(P-ctr));vec3 r=reflect(-V,n);
 float sky=smoothstep(-.18,.70,r.y);
 float strip=exp(-pow((r.y-.16-.13*r.x)/.12,2.));
 float broad=exp(-pow((r.y-.69+.10*r.x)/.27,2.));
@@ -114,9 +118,9 @@ color=vec4(c,1);info=vec4(n*.5+.5,gl_FragCoord.z);}`;
     const quad = `#version 300 es
 out vec2 tc;void main(){vec2 q=vec2((gl_VertexID<<1)&2,gl_VertexID&2);tc=q;gl_Position=vec4(q*2.-1.,0,1);}`;
     const post = `#version 300 es
-precision highp float;uniform sampler2D src,geom;uniform vec2 px,halfSize,pan;uniform float device;uniform vec3 upV,rightV,eyeV;in vec2 tc;out vec4 frag;
+precision highp float;uniform sampler2D src,geom;uniform vec2 px,halfSize,pan;uniform float device;uniform vec3 upV,rightV,eyeV,ctr;in vec2 tc;out vec4 frag;
 float shade(){vec2 p=tc*2.-1.;
- vec3 origin=vec3(0,${CENTER_Y},0)+rightV*((p.x-pan.x)*halfSize.x)+upV*((p.y-pan.y)*halfSize.y);
+ vec3 origin=ctr+rightV*((p.x-pan.x)*halfSize.x)+upV*((p.y-pan.y)*halfSize.y);
  if(eyeV.y<=.04)return 0.;vec3 ground=origin-eyeV*(origin.y/eyeV.y);
  float s=exp(-pow(abs(ground.x)/2.35,4.)-pow(abs(ground.z)/.93,4.));
  float wheel=0.;for(int i=0;i<4;i++){vec2 wc=vec2(i<2?-1.48:1.39,(i%2==0?.81:-.81));wheel=max(wheel,exp(-dot((ground.xz-wc)/vec2(.30,.18),(ground.xz-wc)/vec2(.30,.18))));}
@@ -133,8 +137,8 @@ void main(){vec4 col=texture(src,tc);vec3 result=col.rgb;
  frag=vec4(result*a,a+s);}`;
     const surf = prog(vert, flat), compose = prog(quad, post);
     const locs = (p, names) => Object.fromEntries(names.split(' ').map((n) => [n, gl.getUniformLocation(p, n)]));
-    const u = locs(surf, 'rightV upV eyeV halfSize pan perspective model tex base useTex sel part picking kind');
-    const v = locs(compose, 'px device src geom eyeV upV rightV halfSize pan');
+    const u = locs(surf, 'rightV upV eyeV halfSize pan ctr perspective model tex base useTex sel part picking kind');
+    const v = locs(compose, 'px device src geom eyeV upV rightV halfSize pan ctr');
 
     // ---------- геометрія й текстури ----------
     const gpu = new Map();
@@ -167,8 +171,10 @@ void main(){vec4 col=texture(src,tc);vec3 result=col.rgb;
 
     // ---------- камера ----------
     let part = root.dataset.part in ZONES ? root.dataset.part : 'battery';
-    let [yaw, pitch] = ZONES[part].pose;
-    let from = [yaw, pitch], to = [yaw, pitch], t0 = 0, dur = 1;
+    // стан камери: [yaw, pitch, наближення, центр x, y, z]; наближені вузли дивляться на свою точку focus
+    const camOf = (z) => [...z.pose, z.zoom || 1, ...(z.focus || [0, CENTER_Y, 0])];
+    let [yaw, pitch, zm, ...ctr] = camOf(ZONES[part]);
+    let from = camOf(ZONES[part]), to = from, t0 = 0, dur = 1;
     let glow = 1, glowT0 = 0, dragging = false;
     let device = 1, cam = {}, target = null, pickTarget = null, scheduled = false;
     const lit = new Set(ZONES[part].ids);
@@ -199,10 +205,10 @@ void main(){vec4 col=texture(src,tc);vec3 result=col.rgb;
       // авто вміщається в рамку за будь-якого ракурсу: довжина 4.75 м, ширина 1.95 м, висота 1.45 м
       const projW = 4.75 * Math.abs(co) + 1.95 * Math.abs(si);
       const projH = 1.45 * Math.abs(cp) + Math.abs(sp) * (4.75 * Math.abs(si) + 1.95 * Math.abs(co));
-      const half = Math.max(projH * 0.55, (projW * 0.53 * h) / w);
-      cam = { rightV: [co, 0, -si], upV: [-si * sp, cp, -co * sp], eyeV: [si * cp, sp, co * cp], halfSize: [(half * w) / h, half], pan: [0, 0] };
+      const half = Math.max(projH * 0.55, (projW * 0.53 * h) / w) / zm;
+      cam = { rightV: [co, 0, -si], upV: [-si * sp, cp, -co * sp], eyeV: [si * cp, sp, co * cp], halfSize: [(half * w) / h, half], pan: [0, 0], ctr };
     }
-    function setCam(un) { for (const n of ['rightV', 'upV', 'eyeV']) gl.uniform3fv(un[n], cam[n]); gl.uniform2fv(un.halfSize, cam.halfSize); gl.uniform2fv(un.pan, cam.pan); }
+    function setCam(un) { for (const n of ['rightV', 'upV', 'eyeV', 'ctr']) gl.uniform3fv(un[n], cam[n]); gl.uniform2fv(un.halfSize, cam.halfSize); gl.uniform2fv(un.pan, cam.pan); }
     function scene(isPick) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, (isPick ? pickTarget : target).f);
       gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -222,7 +228,7 @@ void main(){vec4 col=texture(src,tc);vec3 result=col.rgb;
     }
     // точка в 3D → відсотки в рамці (для номера вузла)
     function project([x, y, z]) {
-      const p = [x, y - CENTER_Y, z], d = (a) => a[0] * p[0] + a[1] * p[1] + a[2] * p[2];
+      const p = [x - ctr[0], y - ctr[1], z - ctr[2]], d = (a) => a[0] * p[0] + a[1] * p[1] + a[2] * p[2];
       const w = 1 - 0.108 * d(cam.eyeV);
       const nx = d(cam.rightV) / cam.halfSize[0] / w, ny = d(cam.upV) / cam.halfSize[1] / w;
       return [(nx * 0.5 + 0.5) * 100, (0.5 - ny * 0.5) * 100];
@@ -233,7 +239,7 @@ void main(){vec4 col=texture(src,tc);vec3 result=col.rgb;
       let more = false;
       if (!dragging && t0) {
         const k = Math.min(1, (now - t0) / dur), e = ease(k);
-        yaw = from[0] + (to[0] - from[0]) * e; pitch = from[1] + (to[1] - from[1]) * e;
+        [yaw, pitch, zm, ...ctr] = from.map((f, i) => f + (to[i] - f) * e);
         if (k < 1) more = true; else t0 = 0;
       }
       if (glowT0) { glow = Math.min(1, (now - glowT0) / 450); if (glow < 1) more = true; else glowT0 = 0; }
@@ -255,10 +261,10 @@ void main(){vec4 col=texture(src,tc);vec3 result=col.rgb;
       const changed = next !== part;
       part = next; lit.clear(); ZONES[part].ids.forEach((id) => lit.add(id));
       // найкоротший поворот до потрібного ракурсу
-      const [ty, tp] = ZONES[part].pose;
+      const goal = camOf(ZONES[part]), [ty, tp] = goal;
       const dy = Math.atan2(Math.sin(ty - yaw), Math.cos(ty - yaw));
-      from = [yaw, pitch]; to = [yaw + dy, tp];
-      if (reduce) { yaw = to[0]; pitch = to[1]; t0 = 0; } else { t0 = performance.now(); dur = 700 + 400 * Math.min(1, Math.hypot(dy, tp - pitch) / 2); }
+      from = [yaw, pitch, zm, ...ctr]; to = [yaw + dy, ...goal.slice(1)];
+      if (reduce) { [yaw, pitch, zm, ...ctr] = to; t0 = 0; } else { t0 = performance.now(); dur = 750 + 450 * Math.min(1, Math.hypot(dy, tp - pitch, Math.log(goal[2] / zm)) / 2); }
       if (changed && !reduce) { glow = 0; glowT0 = performance.now(); }
       request();
     }

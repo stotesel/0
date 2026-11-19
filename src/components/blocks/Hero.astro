@@ -16,7 +16,7 @@ const icons = [
   '<path d="M21 8l-9-5-9 5 9 5z"/><path d="M3 8v8l9 5 9-5V8"/>',
 ];
 // Частини авто, які вміє підсвічувати 3D-модель (деталі й ракурси — у src/scripts/tesla3d.js).
-const PARTS = new Set(['battery', 'chassis', 'electronics', 'glass', 'charge', 'climate', 'cooling', 'tyres', 'alignment', 'maintenance']);
+const PARTS = new Set(['battery', 'chassis', 'electronics', 'glass', 'charge', 'climate', 'cooling', 'tyres', 'alignment', 'maintenance', 'brakes', 'aircon']);
 type Zone = { title: string; text: string; slug: string; part: string };
 const saved = ((d.zones ?? []) as Zone[]).filter((z) => PARTS.has(z.part));
 // у збережених в адмінці вузлах можуть бути лише старі шість — нові додаємо в кінець

@@ -27,6 +27,8 @@ export const RU_HOME = {
       { part: 'tyres', slug: 'shynomontazh', text: '', title: 'Шиномонтаж' },
       { part: 'alignment', slug: 'rozval-skhodzhennia', text: '', title: 'Развал-схождение' },
       { part: 'maintenance', slug: 'planove-to', text: '', title: 'Плановое ТО' },
+      { part: 'brakes', slug: 'halmivna-systema', text: '', title: 'Тормозная система' },
+      { part: 'aircon', slug: 'kondytsioner', text: '', title: 'Кондиционер' },
     ],
   },
   services: {

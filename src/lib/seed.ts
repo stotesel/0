@@ -102,7 +102,7 @@ export const seedParts: Part[] = [
 ];
 
 // Вузли на гравюрі Tesla в першому екрані. part визначає, яку частину авто підсвітити:
-// battery, chassis, electronics, glass, charge, climate, cooling, tyres, alignment, maintenance
+// battery, chassis, electronics, glass, charge, climate, cooling, tyres, alignment, maintenance, brakes, aircon
 // (деталі й ракурси — у src/scripts/tesla3d.js). slug прив'язує вузол до послуги:
 // звідти беруться ціна, посилання і (якщо текст порожній) опис.
 export const defaultZones = [
@@ -116,6 +116,8 @@ export const defaultZones = [
   { title: 'Шиномонтаж', text: '', slug: 'shynomontazh', part: 'tyres' },
   { title: 'Розвал-сходження', text: '', slug: 'rozval-skhodzhennia', part: 'alignment' },
   { title: 'Планове ТО', text: '', slug: 'planove-to', part: 'maintenance' },
+  { title: 'Гальмівна система', text: '', slug: 'halmivna-systema', part: 'brakes' },
+  { title: 'Кондиціонер', text: '', slug: 'kondytsioner', part: 'aircon' },
 ];
 
 export const seedBlocks: Block[] = [
