@@ -89,11 +89,14 @@ button[disabled]{opacity:.6;cursor:progress}
 }
 
 /* ---------- Перший екран: схема Tesla ---------- */
-.tesla{min-height:0}
+/* фон — колір великого напису STO (--ink), без сітки; м'яке світло під авто */
+.tesla{min-height:0;background:var(--ink)}
+.tesla::before{background:radial-gradient(ellipse 70% 40% at 50% 50%,rgba(130,160,200,.10),transparent 70%)}
+.tesla .bay-note{color:#A3AFBD}
 .tesla-head{position:relative}
 .tesla .eyebrow{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--hv);margin-bottom:10px}
 .tesla-head h2{font:600 clamp(20px,2.1vw,28px)/1.18 var(--display);letter-spacing:-.02em}
-.tesla-head p{margin-top:10px;font-size:15px;line-height:1.45;color:#A9C0C7;max-width:46ch}
+.tesla-head p{margin-top:10px;font-size:15px;line-height:1.45;color:#A3AFBD;max-width:46ch}
 .tesla-stage{position:relative;margin:22px 0 18px;aspect-ratio:1200/549}
 .tesla-stage .eng{display:block;width:100%;height:100%;transition:opacity .5s}
 /* 3D-модель (src/scripts/tesla3d.js) лягає поверх гравюри-заставки й проявляється, коли готова */
@@ -105,19 +108,21 @@ button[disabled]{opacity:.6;cursor:progress}
 .tesla-stage .hot{display:none;pointer-events:none}
 .tesla-stage.is-3d .hot[aria-pressed="true"]{display:grid}
 /* атрибуція моделі (вимога CC BY 4.0): майже зливається з фоном, проявляється при наведенні */
-.car3d-credit{position:absolute;right:0;bottom:-4px;font-size:9px;color:rgba(169,192,199,.14);text-decoration:none;opacity:0;transition:opacity .6s,color .2s}
-.car3d-credit:hover,.car3d-credit:focus-visible{color:#A9C0C7;text-decoration:underline}
+.car3d-credit{position:absolute;right:0;bottom:-4px;font-size:9px;color:rgba(163,175,189,.16);text-decoration:none;opacity:0;transition:opacity .6s,color .2s}
+.car3d-credit:hover,.car3d-credit:focus-visible{color:#A3AFBD;text-decoration:underline}
 .tesla-stage.is-3d .car3d-credit{opacity:1}
 
-.hot{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(13,42,51,.9);color:#fff;font:600 13px/1 var(--body);cursor:pointer;display:grid;place-items:center;padding:0;transition:background .2s,border-color .2s}
+.hot{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(16,32,48,.92);color:#fff;font:600 13px/1 var(--body);cursor:pointer;display:grid;place-items:center;padding:0;transition:background .2s,border-color .2s}
 .hot::after{content:"";position:absolute;inset:-8px;border-radius:50%}
 .hot:hover{border-color:#fff}
 .hot[aria-pressed="true"]{background:var(--hv);border-color:var(--hv)}
 .hot[aria-pressed="true"]::before{content:"";position:absolute;inset:-1.5px;border-radius:50%;border:2px solid var(--hv);animation:glow 1.8s ease-out infinite}
 
-.tesla-chips{position:relative;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -26px;padding:0 26px 2px}
+.tesla-chips{position:relative;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -26px;padding:0 26px 2px;
+  /* ряд плавно зникає по краях — видно, що його можна гортати */
+  -webkit-mask:linear-gradient(90deg,transparent,#000 26px,#000 calc(100% - 26px),transparent);mask:linear-gradient(90deg,transparent,#000 26px,#000 calc(100% - 26px),transparent)}
 .tesla-chips::-webkit-scrollbar{display:none}
-.tesla-chips button{flex:none;display:flex;align-items:center;gap:8px;border:0;cursor:pointer;background:rgba(255,255,255,.08);color:#CFE0E4;border-radius:999px;padding:9px 14px 9px 9px;font-weight:600;font-size:14px;line-height:1;min-height:40px;transition:background .2s,color .2s}
+.tesla-chips button{flex:none;display:flex;align-items:center;gap:8px;border:0;cursor:pointer;background:rgba(255,255,255,.07);color:#D3DAE2;border-radius:999px;padding:9px 14px 9px 9px;font-weight:600;font-size:14px;line-height:1;min-height:40px;transition:background .2s,color .2s}
 .tesla-chips b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.14);font-size:12px}
 .tesla-chips button[aria-pressed="true"]{background:var(--chalk);color:var(--ink)}
 .tesla-chips button[aria-pressed="true"] b{background:var(--hv);color:#fff}
@@ -126,10 +131,10 @@ button[disabled]{opacity:.6;cursor:progress}
 .tesla-panel{display:none;grid-template-columns:minmax(0,1fr) auto;gap:8px 24px;align-items:start}
 .tesla-panel.on{display:grid}
 .tesla-panel h3{font:600 19px/1.25 var(--body)}
-.tesla-panel p{margin-top:6px;font-size:15px;line-height:1.45;color:#DCE7EA}
+.tesla-panel p{margin-top:6px;font-size:15px;line-height:1.45;color:#DDE3EA}
 .tesla-cost{text-align:right;white-space:nowrap}
 .tesla-cost span{display:block;font:700 22px/1.1 var(--display);letter-spacing:-.02em}
-.tesla-cost small{font:500 13px var(--body);color:#A9C0C7;margin-right:5px}
+.tesla-cost small{font:500 13px var(--body);color:#A3AFBD;margin-right:5px}
 .tesla-cost a{display:inline-block;margin-top:8px;font-size:14px;font-weight:600;color:#fff}
 .tesla .bay-note{margin-top:14px}
 @media (max-width:720px){
