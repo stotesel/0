@@ -11,5 +11,5 @@ export default defineConfig({
   session: false,
   integrations: [react()],
   // Дата збірки йде в <lastmod> sitemap: код і стартові тексти змінюються лише з деплоєм
-  vite: { plugins: [tailwindcss()], define: { __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)) } },
+  vite: { plugins: [tailwindcss()] },
 });

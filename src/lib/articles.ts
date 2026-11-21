@@ -9,6 +9,7 @@ export interface Article {
   seoTitle: string;
   description: string;
   date: string; // YYYY-MM-DD
+  updated?: string; // YYYY-MM-DD — дата суттєвої правки тексту; іде в sitemap як lastmod
   lead: string;
   body: string; // Markdown
   links: [string, string][]; // [назва, шлях] — куди вести читача далі
