@@ -194,7 +194,9 @@ void main(){vec4 col=texture(src,tc);vec3 result=col.rgb;
       return { f, att, depth };
     }
     function size() {
-      device = Math.min(2, Math.max(1.5, devicePixelRatio || 1));
+      // Слабкі пристрої (телефон, ≤4 ядер або ≤4 ГБ пам'яті): роздільність малюнка не вище 1,5
+      const weak = matchMedia('(max-width: 760px)').matches || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+      device = Math.min(weak ? 1.5 : 2, Math.max(1.5, devicePixelRatio || 1));
       const w = Math.max(1, Math.round(canvas.clientWidth * device)), h = Math.max(1, Math.round(canvas.clientHeight * device));
       if (w !== canvas.width || h !== canvas.height || !target) {
         for (const t of [target, pickTarget]) if (t) { t.att.forEach((x) => gl.deleteTexture(x)); gl.deleteRenderbuffer(t.depth); gl.deleteFramebuffer(t.f); }
