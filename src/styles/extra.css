@@ -270,3 +270,11 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 220px}
   .row:nth-child(even of .row:not(.hide)){background:#FDF0E6}
   .row:nth-child(even of .row:not(.hide)) h3 .kind{background:#fff}
 }
+/* смуга заголовка картки: трохи темніша по краях (по ~44% зліва й справа), до центру й донизу розчиняється в кольорі картки */
+@media (max-width:820px){
+  .row{position:relative;isolation:isolate;overflow:clip;--band:rgba(16,32,48,.11)}
+  .row::before{content:"";position:absolute;z-index:-1;left:0;right:0;top:0;height:3.6rem;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(90deg,var(--band) 0,transparent 44%,transparent 56%,var(--band) 100%);
+    mask:linear-gradient(180deg,#000 50%,transparent)}
+  .row:nth-child(even of .row:not(.hide)){--band:rgba(201,76,12,.17)}
+}
