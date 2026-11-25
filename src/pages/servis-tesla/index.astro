@@ -155,9 +155,9 @@ const serviceLd = {
     </div>
   </div></div>
 
-  <section id="faq">
+  <section id="faq" aria-labelledby="faq-h">
     <div class="wrap faq">
-      <h2>Питання власників Tesla</h2>
+      <h2 id="faq-h">Питання власників Tesla</h2>
       <div>
         {faq.map((q) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}
       </div>

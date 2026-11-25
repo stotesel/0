@@ -7,6 +7,15 @@ interface Day { date: string; dow: string; day: string; slots: { time: string; f
 interface Props { services: string[]; preselect?: string; doneText: string; turnstileKey?: string; lang?: Lang }
 const resetTurnstile = () => (window as any).turnstile?.reset?.();
 
+/** Іконка перед текстом помилки: помилку видно не лише кольором, а скринрідер читає «Помилка». */
+function ErrIcon({ label }: { label: string }) {
+  return (
+    <svg className="err-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" role="img" aria-label={label}>
+      <circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5v.01" />
+    </svg>
+  );
+}
+
 /** Українські 9 цифр після коду країни: приймає +380…, 380…, 0… або просто цифри (у тому числі вставлені). */
 function nationalDigits(raw: string): string {
   let d = raw.replace(/\D/g, '');
@@ -24,6 +33,7 @@ function formatPhone(raw: string): string {
 
 export default function BookingForm({ services, preselect = '', doneText, turnstileKey = '', lang = 'uk' }: Props) {
   const L = T[lang].f;
+  const ERR = lang === 'ru' ? 'Ошибка' : 'Помилка';
   const TYPES = L.types as readonly string[];
   const FIRST = L.first;
   const [days, setDays] = useState<Day[] | null>(null);
@@ -76,11 +86,17 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
     const vinOk = vin === '' || /^[A-HJ-NPR-Z0-9]{17}$/.test(vin);
     setVinBad(!vinOk);
     if (!vinOk) return (e.currentTarget.elements.namedItem('vin') as HTMLInputElement).focus();
-    if (!date || !time) return setError(L.pickTime);
+    // Дата, час і тип — з даних форми. Для людини це той самий вибір, що й у стані (радіокнопки контрольовані),
+    // а помічник браузера (WebMCP), що вибрав радіокнопку напряму, не запише чужий день.
+    const selDate = String(f.get('day') ?? '') || date;
+    const selTime = String(f.get('slot') ?? '') || time;
+    const selType = String(f.get('type') ?? '') || type;
+    const selDay = days?.find((d) => d.date === selDate);
+    if (!selDate || !selTime) return setError(L.pickTime);
     setBusy(true);
     setError('');
     const body = {
-      date, time, car_type: type,
+      date: selDate, time: selTime, car_type: selType,
       car: f.get('car'), vin, service: f.get('svc'), name: f.get('name'), phone: f.get('phone'), note: f.get('note'),
       website: f.get('website'),
       turnstile: f.get('cf-turnstile-response'),
@@ -91,11 +107,12 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
       if (!r.ok) {
         resetTurnstile(); // токен одноразовий: після помилки потрібен новий
         setError(data.error ?? L.fail);
-        if (r.status === 409) await load(date);
+        if (r.status === 409) await load(selDate);
         return;
       }
-      (window as any).gtag?.('event', 'generate_lead', { service: String(f.get('svc') ?? ''), car_type: type });
-      setSent({ when: `${current?.dow}, ${current?.day}, ${time.replace(/^0/, '')}`, car: String(f.get('car') ?? ''), svc: String(f.get('svc') ?? '') });
+      (window as any).gtag?.('event', 'generate_lead', { service: String(f.get('svc') ?? ''), car_type: selType });
+      if (selType !== type) setType(selType);
+      setSent({ when: `${selDay?.dow}, ${selDay?.day}, ${selTime.replace(/^0/, '')}`, car: String(f.get('car') ?? ''), svc: String(f.get('svc') ?? '') });
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch {
       resetTurnstile();
@@ -106,7 +123,8 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
   }
 
   return (
-    <form className={`card${sent ? ' sent' : ''}`} id="bookForm" noValidate onSubmit={submit} ref={formRef}>
+    <form className={`card${sent ? ' sent' : ''}`} id="bookForm" noValidate onSubmit={submit} ref={formRef}
+      {...({ toolname: 'book-service-visit', tooldescription: L.toolDesc } as any)}>
       <div className="form-body">
         <div className="field">
           <span className="lbl" id="l-type">{L.type}</span>
@@ -135,8 +153,9 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
         </div>
         <div className={`field${vinBad ? ' invalid' : ''}`}>
           <label htmlFor="vin">{L.vin}</label>
-          <input type="text" id="vin" name="vin" placeholder={L.vinPh} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} style={{ textTransform: 'uppercase' }} />
-          <div className="err">{L.vinErr}</div>
+          <input type="text" id="vin" name="vin" placeholder={L.vinPh} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} style={{ textTransform: 'uppercase' }}
+            aria-invalid={vinBad || undefined} aria-describedby={vinBad ? 'vin-err' : undefined} />
+          <div className="err" id="vin-err"><ErrIcon label={ERR} />{L.vinErr}</div>
         </div>
         <div className="field">
           <span className="lbl" id="l-day">{L.day}</span>
@@ -145,7 +164,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
             {days?.length === 0 && <span className="slots-empty">{L.noSlots}</span>}
             {days?.map((d) => (
               <span key={d.date} style={{ display: 'contents' }}>
-                <input type="radio" name="day" id={`d${d.date}`} checked={date === d.date} onChange={() => { setDate(d.date); setTime(firstFree(d)); }} />
+                <input type="radio" name="day" value={d.date} id={`d${d.date}`} checked={date === d.date} onChange={() => { setDate(d.date); setTime(firstFree(d)); }} />
                 <label htmlFor={`d${d.date}`}>{d.dow}<small>{d.day}</small></label>
               </span>
             ))}
@@ -157,7 +176,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
             <div className="chips" id="slots" role="radiogroup" aria-labelledby="l-time">
               {current.slots.map((s) => (
                 <span key={s.time} style={{ display: 'contents' }}>
-                  <input type="radio" name="slot" id={`s${s.time}`} disabled={!s.free} checked={time === s.time} onChange={() => setTime(s.time)} />
+                  <input type="radio" name="slot" value={s.time} id={`s${s.time}`} disabled={!s.free} checked={time === s.time} onChange={() => setTime(s.time)} />
                   <label htmlFor={`s${s.time}`} className={s.free ? '' : 'busy'} title={s.free ? undefined : L.busy}>{s.time.replace(/^0/, '')}</label>
                 </span>
               ))}
@@ -177,8 +196,9 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
               onChange={(e) => setPhone(formatPhone(e.target.value))}
               onFocus={() => !phone && setPhone('+380 ')}
               onBlur={() => !nationalDigits(phone) && setPhone('')}
+              aria-invalid={phoneBad || undefined} aria-describedby={phoneBad ? 'phone-err' : undefined}
             />
-            <div className="err">{L.phoneErr}</div>
+            <div className="err" id="phone-err"><ErrIcon label={ERR} />{L.phoneErr}</div>
           </div>
         </div>
         <div className="field">
@@ -192,7 +212,7 @@ export default function BookingForm({ services, preselect = '', doneText, turnst
           <small>{L.consent} <a href="/polityka-konfidentsiynosti/" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>{L.privacy}</a></small>
           <button className="btn btn-ink" type="submit" disabled={busy}>{busy ? L.sending : L.send}</button>
         </div>
-        {error && <div className="form-err" role="alert">{error}</div>}
+        {error && <div className="form-err" role="alert"><ErrIcon label={ERR} />{error}</div>}
       </div>
       <div className="done" role="status">
         <h3>{L.done}</h3>

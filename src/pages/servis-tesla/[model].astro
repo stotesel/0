@@ -92,9 +92,9 @@ const serviceLd = {
 
   {shownReviews.length > 0 && <Reviews reviews={shownReviews} title="Відгуки власників Tesla" more tight />}
 
-  <section id="faq">
+  <section id="faq" aria-labelledby="faq-h">
     <div class="wrap faq">
-      <h2>Питання про Tesla {m.name}</h2>
+      <h2 id="faq-h">Питання про Tesla {m.name}</h2>
       <div>{m.faq.map((q) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}</div>
     </div>
   </section>

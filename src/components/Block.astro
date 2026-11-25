@@ -74,9 +74,9 @@ const brands = block.type === 'brands' ? [...(d.items ?? []), ...(d.items ?? [])
 {block.type === 'booking' && <Booking data={d} settings={settings} services={services} tight={tight} />}
 
 {block.type === 'faq' && (
-  <section id="faq" style={pad}>
+  <section id="faq" aria-labelledby="faq-h" style={pad}>
     <div class="wrap faq">
-      <h2>{d.title}</h2>
+      <h2 id="faq-h">{d.title}</h2>
       <div>
         {(d.items ?? []).map((q: any) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}
       </div>

@@ -41,9 +41,9 @@ const reviews = approved(site.reviews);
   {reviews.length > 0 && <Reviews reviews={reviews} title={H.reviews.title} text={H.reviews.text} limit={6} tight lang="ru" />}
   <Contacts title={H.contacts.title} settings={settings} tight lang="ru" />
 
-  <section id="faq" style="padding-top:24px">
+  <section id="faq" aria-labelledby="faq-h" style="padding-top:24px">
     <div class="wrap faq">
-      <h2>{H.faq.title}</h2>
+      <h2 id="faq-h">{H.faq.title}</h2>
       <div>{H.faq.items.map((q) => <details><summary>{q.title}</summary><p>{q.text}</p></details>)}</div>
     </div>
   </section>
