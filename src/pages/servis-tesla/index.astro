@@ -7,7 +7,7 @@ import Reviews from '../../components/Reviews.astro';
 import { TESLA_MODELS } from '../../lib/teslaModels';
 import { ALL_ARTICLES } from '../../lib/articles';
 import { teslaReviews } from '../../lib/reviews';
-import { PRICE_ON_REQUEST, areaServed, districtPhrase, titleNear, breadcrumbLd, faqLd, loadSite, price, tel } from '../../lib/site';
+import { PRICE_ON_REQUEST, areaServed, districtPhrase, titleNear, breadcrumbLd, faqLd, loadSite, price, callText, tel } from '../../lib/site';
 
 const { settings, blocks, services, nextFree, reviews } = await loadSite();
 const tReviews = teslaReviews(reviews);
@@ -119,7 +119,7 @@ const serviceLd = {
       {minPrice > 0 && <div><div class="k">Вартість робіт</div><div class="v"><small>від</small>{price(minPrice)} грн</div></div>}
       <p class="k">Ціна без запчастин. Точну суму фіксуємо в кошторисі до початку робіт.</p>
       <a class="btn btn-hv" href="#book">Обрати час візиту</a>
-      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{callText(settings, 'uk')}</a>
     </aside>
   </div></div>
 

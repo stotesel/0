@@ -161,6 +161,7 @@ const SETTINGS_FIELDS: Field[] = [
   { key: 'phone', label: 'Телефон (як показувати)' },
   { key: 'phoneE164', label: 'Телефон для дзвінка', hint: 'У форматі +380XXXXXXXXX' },
   { key: 'phoneNote', label: 'Підпис під телефоном у шапці' },
+  { key: 'phoneLines', label: 'Телефони для вибору при дзвінку', type: 'lines', hint: 'Формат: Ім’я | 050 000 00 00. Якщо номер один, вибір не показується; перший рядок краще лишити загальним.' },
   { key: 'email', label: 'Пошта' },
   { key: 'street', label: 'Вулиця і будинок' },
   { key: 'city', label: 'Місто' },

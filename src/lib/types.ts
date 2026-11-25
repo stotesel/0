@@ -22,6 +22,8 @@ export interface Settings {
   phone: string;
   phoneE164: string;
   phoneNote: string;
+  /** Телефони для вибору при дзвінку, по одному в рядку: «Ім'я | 050 000 00 00». Якщо номер один, вибір не показується. */
+  phoneLines?: string[];
   email: string;
   street: string;
   city: string;

@@ -37,7 +37,7 @@ export const T = {
     nav: [['/servis-tesla/', 'Сервіс Tesla'], ['/#services', 'Послуги і ціни'], ['/zapchastyny/', 'Запчастини'], ['/pro-nas/', 'Про нас'], ['/vidguky/', 'Відгуки'], ['/kontakty/', 'Контакти']],
     foot: [['/servis-tesla/', 'Сервіс Tesla'], ['/poslugy/', 'Послуги'], ['/vidguky/', 'Відгуки'], ['/statti/', 'Статті'], ['/pro-nas/', 'Про нас'], ['/tsiny/', 'Ціни'], ['/zapchastyny/', 'Запчастини'], ['/kontakty/', 'Контакти'], ['/polityka-konfidentsiynosti/', 'Політика конфіденційності']],
     home: 'на головну', menu: 'Меню', sections: 'Розділи сайту', pages: 'Сторінки сайту',
-    book: 'Записатися', call: 'Подзвонити', switchTo: 'RU', switchLabel: 'Русская версия',
+    book: 'Записатися', call: 'Подзвонити', callFull: 'Зателефонувати', pickPhone: 'Кому зателефонувати?', close: 'Закрити', switchTo: 'RU', switchLabel: 'Русская версия',
     // прайс
     allServices: 'Усі послуги', ice: 'Бензин / дизель', hyb: 'Гібриди', ev: 'Електромобілі', filter: 'Фільтр послуг',
     showAll: 'Показати всі послуги', collapse: 'Згорнути', from: 'від', uah: 'грн', onRequest: 'за запитом', kindHyb: 'гібрид', kindIce: 'ДВЗ',
@@ -63,7 +63,7 @@ export const T = {
     nav: [['/ru/servis-tesla/', 'Сервис Tesla'], ['/ru/#services', 'Услуги и цены'], ['/ru/#reviews', 'Отзывы'], ['/ru/#faq', 'Вопросы'], ['/ru/kontakty/', 'Контакты']],
     foot: [['/ru/servis-tesla/', 'Сервис Tesla'], ['/ru/#services', 'Услуги и цены'], ['/ru/kontakty/', 'Контакты'], ['/', 'Українська версія'], ['/polityka-konfidentsiynosti/', 'Политика конфиденциальности (укр.)']],
     home: 'на главную', menu: 'Меню', sections: 'Разделы сайта', pages: 'Страницы сайта',
-    book: 'Записаться', call: 'Позвонить', switchTo: 'UA', switchLabel: 'Українська версія',
+    book: 'Записаться', call: 'Позвонить', callFull: 'Позвонить', pickPhone: 'Кому позвонить?', close: 'Закрыть', switchTo: 'UA', switchLabel: 'Українська версія',
     allServices: 'Все услуги', ice: 'Бензин / дизель', hyb: 'Гибриды', ev: 'Электромобили', filter: 'Фильтр услуг',
     showAll: 'Показать все услуги', collapse: 'Свернуть', from: 'от', uah: 'грн', onRequest: 'по запросу', kindHyb: 'гибрид', kindIce: 'ДВС',
     address: 'Адрес', phone: 'Телефон', email: 'Почта', hours: 'График', messengers: 'Мессенджеры', routeGoogle: 'Маршрут в Google Maps', map: 'Карта',

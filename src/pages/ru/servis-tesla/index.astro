@@ -4,7 +4,7 @@ import { marked } from 'marked';
 import Base from '../../../layouts/Base.astro';
 import Booking from '../../../components/blocks/Booking.astro';
 import Reviews from '../../../components/Reviews.astro';
-import { addressLine, areaServed, breadcrumbLd, faqLd, loadSite, price, tel } from '../../../lib/site';
+import { addressLine, areaServed, breadcrumbLd, faqLd, loadSite, price, callText, tel } from '../../../lib/site';
 import { ruService, ruSettings } from '../../../lib/i18n';
 import { teslaReviews } from '../../../lib/reviews';
 import { TESLA_MODELS } from '../../../lib/teslaModels';
@@ -52,7 +52,7 @@ const serviceLd = {
       {Number.isFinite(minPrice) && <div><div class="k">Стоимость работ</div><div class="v"><small>от</small>{price(minPrice)} грн</div></div>}
       <p class="k">Цена без запчастей. Точную сумму фиксируем в смете до начала работ.</p>
       <a class="btn btn-hv" href="#book">Выбрать время визита</a>
-      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{callText(settings, 'ru')}</a>
     </aside>
   </div></div>
 

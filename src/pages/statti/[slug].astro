@@ -3,7 +3,7 @@ import { marked } from 'marked';
 import Base from '../../layouts/Base.astro';
 import Booking from '../../components/blocks/Booking.astro';
 import Photo from '../../components/Photo.astro';
-import { breadcrumbLd, loadSite, tel } from '../../lib/site';
+import { breadcrumbLd, loadSite, callText, tel } from '../../lib/site';
 import { ALL_ARTICLES, article } from '../../lib/articles';
 import { reviewDate } from '../../lib/reviews';
 
@@ -49,7 +49,7 @@ const articleLd = {
         {a.links.map(([t, h]) => <li><a href={h}>{t}</a></li>)}
       </ul>
       <a class="btn btn-hv" href="#book">Записатися на діагностику</a>
-      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{callText(settings, 'uk')}</a>
     </aside>
   </div></div>
 

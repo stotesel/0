@@ -5,7 +5,7 @@ import Base from '../../layouts/Base.astro';
 import Booking from '../../components/blocks/Booking.astro';
 import Photo from '../../components/Photo.astro';
 import Reviews from '../../components/Reviews.astro';
-import { PRICE_ON_REQUEST, areaServed, breadcrumbLd, districtList, faqLd, loadSite, price, tel, titleNear } from '../../lib/site';
+import { PRICE_ON_REQUEST, areaServed, breadcrumbLd, districtList, faqLd, loadSite, price, callText, tel, titleNear } from '../../lib/site';
 import { teslaReviews } from '../../lib/reviews';
 import { TESLA_MODELS, teslaModel } from '../../lib/teslaModels';
 import { articlesFor } from '../../lib/articles';
@@ -70,7 +70,7 @@ const serviceLd = {
       {Number.isFinite(minPrice) && <div><div class="k">Роботи для {m.name}</div><div class="v"><small>від</small>{price(minPrice)} грн</div></div>}
       <p class="k">Ціна без запчастин. Точну суму фіксуємо в кошторисі до початку робіт.</p>
       <a class="btn btn-hv" href="#book">Записатися</a>
-      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{callText(settings, 'uk')}</a>
     </aside>
   </div></div>
 

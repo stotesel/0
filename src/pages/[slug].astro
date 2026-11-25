@@ -3,7 +3,7 @@
 import { marked } from 'marked';
 import Base from '../layouts/Base.astro';
 import Booking from '../components/blocks/Booking.astro';
-import { areaServed, breadcrumbLd, loadSite, price, tel } from '../lib/site';
+import { areaServed, breadcrumbLd, loadSite, price, callText, tel } from '../lib/site';
 import { serviceTexts } from '../lib/serviceTexts';
 import { articlesFor } from '../lib/articles';
 import { TESLA_MODELS } from '../lib/teslaModels';
@@ -57,7 +57,7 @@ const serviceLd = {
       <div><div class="k">Тривалість</div><div class="v">{s.duration}</div></div>
       <p class="k">{hasPrice ? 'Ціна без запчастин. Точну суму фіксуємо в кошторисі до початку робіт.' : 'Вартість залежить від авто й розміру коліс. Назвемо точну суму телефоном або під час запису.'}</p>
       <a class="btn btn-hv" href="#book">Обрати час візиту</a>
-      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{callText(settings, 'uk')}</a>
     </aside>
   </div></div>
   {models.length > 0 && (

@@ -10,6 +10,20 @@ export async function loadSite() {
 }
 
 export const tel = (s: Settings) => `tel:${s.phoneE164}`;
+/** Напис на кнопках дзвінка: якщо номерів кілька, номер не показуємо, а кличемо до вибору. */
+export const callText = (s: Settings, lang: 'uk' | 'ru' = 'uk') => ((s.phoneLines ?? []).filter((l) => l.includes('|')).length > 1 ? (lang === 'ru' ? 'Позвонить' : 'Зателефонувати') : s.phone);
+const NAMES_RU: Record<string, string> = { 'Загальний': 'Общий', 'Валерій': 'Валерий', 'Адміністратор': 'Администратор', 'Майстер': 'Мастер' };
+/** Номери з налаштувань («Ім'я | 096 445 87 43») для вікна вибору. Порожній список, якщо номер один. */
+export function phoneList(s: Settings, lang: 'uk' | 'ru' = 'uk') {
+  const list = (s.phoneLines ?? []).map((l) => {
+    const [n, ...rest] = l.split('|');
+    const phone = rest.join('|').trim();
+    const d = phone.replace(/\D/g, '').slice(-10);
+    const name = n.trim();
+    return d.length === 10 ? { name: lang === 'ru' ? (NAMES_RU[name] ?? name) : name, phone, e164: `+38${d}` } : null;
+  }).filter((x): x is { name: string; phone: string; e164: string } => !!x);
+  return list.length > 1 ? list : [];
+}
 export const addressLine = (s: Settings) => `${s.street}, ${s.city}`;
 export const price = (n: number) => n.toLocaleString('uk-UA').replace(/ /g, ' ');
 /** Ціна 0 у послузі означає «за запитом» (напр. шиномонтаж, де все залежить від радіуса). */

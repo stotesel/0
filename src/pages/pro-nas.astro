@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 import Photo from '../components/Photo.astro';
 import Reviews from '../components/Reviews.astro';
 import Booking from '../components/blocks/Booking.astro';
-import { breadcrumbLd, districtList, loadSite, tel } from '../lib/site';
+import { breadcrumbLd, districtList, loadSite, callText, tel } from '../lib/site';
 import { approved } from '../lib/reviews';
 import { PHOTO_SLOTS } from '../lib/photos';
 
@@ -38,7 +38,7 @@ const description = `${settings.name} — автосервіс у Києві: Te
       <div><div class="k">Адреса</div><div class="v" style="font-size:22px">{settings.street}</div></div>
       <div><div class="k">Графік</div><div>{settings.hoursText}</div></div>
       <a class="btn btn-hv" href="#book">Записатися</a>
-      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{callText(settings, 'uk')}</a>
       <a class="btn btn-ghost" href="/kontakty/">Як доїхати</a>
     </aside>
   </div></div>

@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { breadcrumbLd, loadSite, price, tel } from '../lib/site';
+import { breadcrumbLd, loadSite, callText, price, tel } from '../lib/site';
 import { getParts } from '../lib/store';
 
 const [{ settings, nextFree }, parts] = await Promise.all([loadSite(), getParts()]);
@@ -38,7 +38,7 @@ const description = `Запчастини в ${settings.name}: оливи, фі�
     ))}
     {parts.length === 0 && <p class="lead">Перелік оновлюється. Зателефонуйте, підкажемо наявність.</p>}
     <p style="margin-top:36px;display:flex;flex-wrap:wrap;gap:12px">
-      <a class="btn btn-hv" href={tel(settings)}>Уточнити наявність: {settings.phone}</a>
+      <a class="btn btn-hv" href={tel(settings)}>Уточнити наявність: {callText(settings)}</a>
       <a class="btn btn-ghost" href="/#book">Записатися на заміну</a>
     </p>
   </div></div>

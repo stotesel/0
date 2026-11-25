@@ -3,7 +3,7 @@
 import { marked } from 'marked';
 import Base from '../../layouts/Base.astro';
 import Booking from '../../components/blocks/Booking.astro';
-import { areaServed, breadcrumbLd, loadSite, price, tel } from '../../lib/site';
+import { areaServed, breadcrumbLd, loadSite, price, callText, tel } from '../../lib/site';
 import { ruService, ruSettings } from '../../lib/i18n';
 import { RU_SERVICES } from '../../lib/ru/services';
 import { RU_HOME } from '../../lib/ru/home';
@@ -52,7 +52,7 @@ const serviceLd = {
       <div><div class="k">Длительность</div><div class="v">{s.duration}</div></div>
       <p class="k">{hasPrice ? 'Цена без запчастей. Точную сумму фиксируем в смете до начала работ.' : 'Стоимость зависит от авто и размера колёс. Назовём точную сумму по телефону или при записи.'}</p>
       <a class="btn btn-hv" href="#book">Выбрать время визита</a>
-      <a class="btn btn-ghost" href={tel(settings)}>{settings.phone}</a>
+      <a class="btn btn-ghost" href={tel(settings)}>{callText(settings, 'ru')}</a>
     </aside>
   </div></div>
   {models.length > 0 && (

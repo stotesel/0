@@ -5,7 +5,7 @@ import '@fontsource-variable/unbounded';
 import '../styles/site.css';
 import '../styles/extra.css';
 import type { Settings } from '../lib/types';
-import { clip, tel } from '../lib/site';
+import { clip, phoneList, tel } from '../lib/site';
 import { T, type Lang } from '../lib/i18n';
 
 interface Props {
@@ -23,6 +23,7 @@ interface Props {
 const { settings, title, nextFree = '', jsonLd = [], noindex = false, lang = 'uk', alt = '', ogType = 'website' } = Astro.props;
 const description = clip(Astro.props.description);
 const t = T[lang];
+const phones = phoneList(settings, lang);
 const home = lang === 'ru' ? '/ru/' : '/';
 const altHref = alt || (lang === 'ru' ? '/' : '/ru/');
 const ukPath = lang === 'uk' ? path0() : alt;
@@ -87,7 +88,9 @@ const nav = t.nav;
       {nav.map(([href, label]) => <a href={href}>{label}</a>)}
     </nav>
     <a class="lang-sw" href={altHref} hreflang={lang === 'ru' ? 'uk' : 'ru'} aria-label={t.switchLabel} title={t.switchLabel}>{t.switchTo}</a>
-    <a class="top-phone" href={tel(settings)}>{settings.phone}<small>{nextFree || settings.phoneNote}</small></a>
+    <a class={`top-phone${phones.length > 1 ? ' top-call' : ''}`} href={tel(settings)}>{phones.length > 1
+      ? <span class="tc-btn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg><span class="tc-t"><b>{t.callFull}</b><small>{nextFree || settings.phoneNote}</small></span></span>
+      : <>{settings.phone}<small>{nextFree || settings.phoneNote}</small></>}</a>
     <a class="btn btn-hv btn-book" href={`${home}#book`}>{t.book}</a>
     <button class="burger" id="burger" aria-label={t.menu} aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
   </div>
@@ -114,6 +117,31 @@ const nav = t.nav;
   <a class="btn btn-hv" href={`${home}#book`}>{t.book}</a>
 </div>
 
+{phones.length > 1 && (
+  <div class="phone-pick" id="phone-pick" role="dialog" aria-modal="true" aria-labelledby="phone-pick-t" hidden>
+    <div class="pp-box">
+      <div class="pp-head"><b id="phone-pick-t">{t.pickPhone}</b><button type="button" class="pp-x" data-pp-close aria-label={t.close}>×</button></div>
+      {phones.map((p) => <a class="pp-row" href={`tel:${p.e164}`}><span>{p.name}</span><b>{p.phone}</b></a>)}
+    </div>
+  </div>
+)}
+
+<script is:inline>
+  /* вибір номера: усі посилання tel: відкривають вікно, якщо номерів кілька (без JS дзвонить на основний) */
+  (function () {
+    const pick = document.getElementById('phone-pick');
+    if (!pick) return;
+    let from = null;
+    const open = (a) => { from = a; pick.hidden = false; document.body.classList.add('pp-open'); const f = pick.querySelector('.pp-row'); f && f.focus(); };
+    const close = () => { pick.hidden = true; document.body.classList.remove('pp-open'); from && from.focus && from.focus(); };
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('a[href^="tel:"]');
+      if (a && !pick.contains(a)) { e.preventDefault(); open(a); return; }
+      if (e.target === pick || (e.target.closest && e.target.closest('[data-pp-close]'))) close();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pick.hidden) close(); });
+  })();
+</script>
 <script is:inline>
   /* цілі аналітики: дзвінок, пошта, месенджери. Без GA4 (gtag відсутній) нічого не відбувається. */
   document.addEventListener('click', (e) => {
