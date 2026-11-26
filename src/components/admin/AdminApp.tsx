@@ -14,6 +14,8 @@ interface Data {
   services: Service[];
   parts: Part[];
   bookings: Booking[];
+  calls: Record<string, { p: Record<string, number>; s: Record<string, number>; o: number }>;
+  today: string;
   days: DaySlots[];
   blockTemplates: Record<string, { label: string; data: Record<string, any> }>;
 }
@@ -242,7 +244,7 @@ function Rows<T extends { id: string; title: string; enabled: boolean; sort: num
 }
 
 /* ---------- Застосунок ---------- */
-const TABS = [['bookings', 'Заявки'], ['schedule', 'Розклад'], ['reviews', 'Відгуки'], ['services', 'Послуги і ціни'], ['parts', 'Запчастини'], ['blocks', 'Головна сторінка'], ['photos', 'Фото'], ['settings', 'Налаштування']] as const;
+const TABS = [['bookings', 'Заявки'], ['calls', 'Дзвінки'], ['schedule', 'Розклад'], ['reviews', 'Відгуки'], ['services', 'Послуги і ціни'], ['parts', 'Запчастини'], ['blocks', 'Головна сторінка'], ['photos', 'Фото'], ['settings', 'Налаштування']] as const;
 type Tab = (typeof TABS)[number][0];
 
 export default function AdminApp() {
@@ -334,6 +336,8 @@ export default function AdminApp() {
           ))}
         </section>
       )}
+
+      {tab === 'calls' && <CallsTab data={data} />}
 
       {tab === 'schedule' && <ScheduleTab data={data} onSave={saveSchedule} />}
 
@@ -431,6 +435,71 @@ export default function AdminApp() {
 /* ---------- Відгуки ---------- */
 const REVIEW_STATUS: [Review['status'], string][] = [['pending', 'На перевірці'], ['approved', 'Опубліковано'], ['hidden', 'Приховано']];
 const REVIEW_TINT: Record<Review['status'], string> = { pending: '!bg-amber-50 ring-1 ring-amber-200', approved: '', hidden: 'opacity-60' };
+
+/* ---------- Дзвінки ---------- */
+const PERIODS = [[1, 'Сьогодні'], [7, '7 днів'], [30, '30 днів'], [0, 'Увесь час']] as const;
+const shift = (date: string, n: number) => { const d = new Date(`${date}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+
+function CallsTab({ data }: { data: Data }) {
+  const [days, setDays] = useState<number>(30);
+  const from = days ? shift(data.today, -(days - 1)) : '';
+  const picked = Object.entries(data.calls ?? {}).filter(([d]) => d >= from && d <= data.today);
+  // Назви номерів беремо з налаштувань («Руслан | 096 …»), інакше показуємо сам номер
+  const names: Record<string, string> = { [data.settings.phoneE164]: `Загальний · ${data.settings.phone}` };
+  for (const l of data.settings.phoneLines ?? []) {
+    const [n, ...rest] = l.split('|');
+    const ph = rest.join('|').trim();
+    const dg = ph.replace(/\D/g, '').slice(-10);
+    if (dg.length === 10) names[`+38${dg}`] = `${n.trim()} · ${ph}`;
+  }
+  const byPhone: Record<string, number> = {}, byPage: Record<string, number> = {};
+  let opened = 0;
+  for (const [, d] of picked) {
+    for (const [k, v] of Object.entries(d.p)) byPhone[k] = (byPhone[k] ?? 0) + v;
+    for (const [k, v] of Object.entries(d.s)) byPage[k] = (byPage[k] ?? 0) + v;
+    opened += d.o;
+  }
+  const total = Object.values(byPhone).reduce((a, b) => a + b, 0);
+  const sort = (o: Record<string, number>) => Object.entries(o).sort((a, b) => b[1] - a[1]);
+  const daily = picked.sort((a, b) => b[0].localeCompare(a[0])).slice(0, 31);
+  return (
+    <section className="grid gap-4">
+      <div className="flex flex-wrap gap-1">
+        {PERIODS.map(([n, l]) => <button key={n} onClick={() => setDays(n)} className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm font-semibold ${days === n ? 'bg-ink text-white' : 'bg-white text-slate-600 shadow-sm'}`}>{l}</button>)}
+      </div>
+      <div className="card">
+        <div className="text-sm text-slate-500">Натиснули на номер</div>
+        <div className="text-4xl font-black tracking-tight">{total}</div>
+        {opened > 0 && <div className="mt-1 text-sm text-slate-500">Відкрили вікно вибору номера: {opened} (з них не обрали номер: {Math.max(0, opened - total)})</div>}
+        <p className="mt-2 text-xs text-slate-400">Рахується натискання на номер на сайті. Чи відбулася розмова, сайт не знає: з комп’ютера натискання часто нічого не набирає.</p>
+      </div>
+      <div className="card">
+        <h3 className="mb-2 font-bold">За номерами</h3>
+        {total === 0 ? <p className="text-sm text-slate-500">За цей період натискань ще не було.</p> : (
+          <table className="w-full text-sm"><tbody>
+            {sort(byPhone).map(([k, v]) => <tr key={k} className="border-b border-slate-100"><td className="py-2">{names[k] ?? k}</td><td className="py-2 text-right font-bold">{v}</td></tr>)}
+          </tbody></table>
+        )}
+      </div>
+      {total > 0 && (
+        <div className="card">
+          <h3 className="mb-2 font-bold">З яких сторінок</h3>
+          <table className="w-full text-sm"><tbody>
+            {sort(byPage).map(([k, v]) => <tr key={k} className="border-b border-slate-100"><td className="py-2"><a className="text-hv-deep underline" href={k} target="_blank" rel="noopener">{k}</a></td><td className="py-2 text-right font-bold">{v}</td></tr>)}
+          </tbody></table>
+        </div>
+      )}
+      {daily.length > 0 && (
+        <div className="card">
+          <h3 className="mb-2 font-bold">По днях</h3>
+          <table className="w-full text-sm"><tbody>
+            {daily.map(([d, x]) => <tr key={d} className="border-b border-slate-100"><td className="py-2 w-32">{fmtDate(d)}</td><td className="py-2 text-slate-600">{sort(x.p).map(([k, v]) => `${(names[k] ?? k).split(' · ')[0]}: ${v}`).join(', ') || '—'}</td><td className="py-2 text-right font-bold">{Object.values(x.p).reduce((a, b) => a + b, 0)}</td></tr>)}
+          </tbody></table>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function ReviewsTab({ reviews, act }: { reviews: Review[]; act: (b: Record<string, unknown>, ok?: string) => Promise<void> | void }) {
   const [filter, setFilter] = useState<'all' | Review['status']>(reviews.some((r) => r.status === 'pending') ? 'pending' : 'all');

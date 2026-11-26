@@ -1,5 +1,6 @@
 ---
-// Посадкова сторінка під запити «сервіс Tesla Київ», «ремонт Tesla», «СТО Tesla».
+// Посадкова сторінка під запити «ремонт Tesla/Тесла Київ», «СТО Tesla», «сервіс Тесла».
+// Google показує її і за кириличним «тесла», тому обидва написання є в title, H1 і тексті.
 import { marked } from 'marked';
 import Base from '../../layouts/Base.astro';
 import Booking from '../../components/blocks/Booking.astro';
@@ -21,10 +22,14 @@ const related = services.filter((s) => s.kind === 'ev' || extra.includes(s.slug)
 const minPrice = related.length ? Math.min(...related.map((s) => s.price_from).filter((n) => n > 0)) : 0;
 
 const near = titleNear(settings);
-const title = `Ремонт і сервіс Tesla у ${city}${near ? ` — ${near}` : ''} | ${settings.name}`;
-const description = `Ремонт і ТО Tesla Model S, 3, X, Y у ${city}${near ? ` (${near})` : ''}: діагностика батареї, охолодження, тепловий насос, зарядка, ходова й гальма. ${settings.street}. Запис: ${settings.phone}.`;
+const title = `Ремонт Tesla (Тесла) у ${city} — СТО і сервіс Tesla | ${settings.name}`;
+const description = `Ремонт Тесла у ${city}${near ? ` (${near})` : ''}: СТО для Tesla Model S, 3, X, Y. Батарея, ходова, гальма, клімат. Без черги, запис: ${settings.phone}.`;
 
-const body = `## Сервіс Tesla без поїздки за кордон
+const body = `## СТО Tesla у ${city}
+
+Шукаєте, де зробити ремонт Тесла у ${city}? ${settings.name} — СТО, що спеціалізується на Tesla: ремонт і планове ТО Tesla Model S, 3, X та Y, діагностика високовольтної батареї, ходова, гальма, кондиціонер і тепловий насос. Майстри мають допуск до роботи з високою напругою, а запис іде на конкретний час, тож Тесла не чекає в черзі.
+
+## Сервіс Tesla без поїздки за кордон
 
 В Україні немає офіційного сервісного центру Tesla, а більшість звичайних СТО відмовляються працювати з електромобілями або беруться лише за колеса й гальма. ${settings.name} обладнаний для роботи з високою напругою, тож ми обслуговуємо Tesla повністю: від заміни салонного фільтра до діагностики високовольтної батареї та системи термоменеджменту.
 
@@ -82,6 +87,8 @@ ${settings.name} розташований за адресою **${settings.stree
 Деталі пропонуємо у двох варіантах: оригінал Tesla або перевірений аналог, якщо такий існує для конкретного вузла. Ходові позиції привозимо від імпортерів Києва за 1–2 години, рідкісні замовляємо заздалегідь, щоб авто не простоювало на підйомнику.`;
 
 const faq = [
+  { title: 'Скільки коштує ремонт Tesla у Києві?', text: `Залежить від вузла. Роботи з Tesla в ${settings.name} коштують від ${price(minPrice || 500)} грн без запчастин, діагностика батареї — від ${price(services.find((s) => s.slug === 'diahnostyka-batarei-ev')?.price_from ?? 1500)} грн. Точну суму фіксуємо в кошторисі до початку робіт, ціни на всі послуги є в розділі «Послуги для Tesla і ціни».` },
+  { title: 'Чи є в Києві офіційний сервіс Tesla?', text: `Офіційного сервісного центру Tesla в Україні немає. Ремонт і ТО Тесла роблять незалежні СТО з обладнанням для електромобілів. ${settings.name} — одне з них: ${settings.street}, ${settings.city}.` },
   { title: 'Де відремонтувати Tesla на Нивках чи Виноградарі?', text: `У ${settings.name}: ${settings.street}, ${settings.city}, між Нивками та Виноградарем. Обслуговуємо Тесла Model S, 3, X і Y за попереднім записом, телефон ${settings.phone}.` },
   { title: 'Чи обслуговуєте Tesla, привезені зі США?', text: 'Так. Більшість Tesla в Україні привезені зі США та Канади. Ми працюємо з ними так само, як з європейськими, і допомагаємо з питаннями зарядки: перевіряємо порт і підбираємо безпечні адаптери для українських станцій.' },
   { title: 'Можна перевірити батарею Tesla перед купівлею?', text: `Так. Діагностика показує залишкову ємність (SOH), баланс комірок і помилки системи керування батареєю. Ви отримуєте звіт, який зручно показати продавцю під час торгу. Вартість від ${price(services.find((s) => s.slug === 'diahnostyka-batarei-ev')?.price_from ?? 1500)} грн.` },
@@ -94,6 +101,7 @@ const serviceLd = {
   '@context': 'https://schema.org',
   '@type': 'Service',
   name: 'Сервіс і ремонт Tesla',
+  alternateName: ['Ремонт Тесла', 'СТО Tesla', 'Сервіс Тесла'],
   serviceType: 'Ремонт і обслуговування електромобілів Tesla',
   description,
   areaServed: areaServed(settings),
@@ -105,7 +113,7 @@ const serviceLd = {
   jsonLd={[serviceLd, faqLd(faq), breadcrumbLd(origin, [['Головна', '/'], ['Сервіс Tesla', '/servis-tesla/']])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навігація"><a href="/">Головна</a><span>/</span><span>Сервіс Tesla</span></nav>
-    <h1>Ремонт і сервіс Tesla у {city}{near && ` — ${near}`}</h1>
+    <h1>Ремонт Tesla у {city} — СТО для Тесла{near && `, ${near}`}</h1>
     <p class="lead">Model S, 3, X та Y. Діагностика батареї, охолодження, тепловий насос, зарядка, ходова й гальма з допуском до роботи з високою напругою.</p>
   </div></div>
 

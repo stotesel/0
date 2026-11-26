@@ -18,15 +18,18 @@ const origin = (settings.siteUrl || Astro.url.origin).replace(/\/$/, '');
 const extra = ['kompiuterna-diahnostyka', 'remont-khodovoi', 'halmivna-systema', 'rozval-skhodzhennia'];
 const related = services.filter((s) => s.kind === 'ev' || extra.includes(s.slug));
 const minPrice = Math.min(...related.map((s) => s.price_from).filter((n) => n > 0));
-const faq = ruTeslaFaq(settings.name, addressLine(settings), settings.phone);
+const batteryFrom = services.find((s) => s.slug === 'diahnostyka-batarei-ev')?.price_from ?? 1500;
+const faq = ruTeslaFaq(settings.name, addressLine(settings), settings.phone, Number.isFinite(minPrice) ? minPrice : 500, batteryFrom);
 const tReviews = teslaReviews(site.reviews);
 
-const title = `Ремонт и сервис Tesla в Киеве — Нивки и Виноградарь | ${settings.name}`;
-const description = `Ремонт и ТО Tesla Model S, 3, X, Y в Киеве (${settings.districts}): диагностика батареи, охлаждение, тепловой насос, зарядка, ходовая и тормоза. ${settings.street}. Запись: ${settings.phone}.`;
+// Обе формы написания («Tesla» и «Тесла») в title, H1 и тексте: по-русски так ищут чаще всего.
+const title = `Ремонт Tesla (Тесла) в Киеве — СТО и сервис Tesla | ${settings.name}`;
+const description = `Ремонт Теслы в Киеве (${settings.districts}): СТО для Tesla Model S, 3, X, Y. Батарея, ходовая, тормоза, климат. Без очереди, запись: ${settings.phone}.`;
 const serviceLd = {
   '@context': 'https://schema.org',
   '@type': 'Service',
   name: 'Сервис и ремонт Tesla',
+  alternateName: ['Ремонт Теслы', 'СТО Tesla', 'Сервис Тесла'],
   serviceType: 'Ремонт и обслуживание электромобилей Tesla',
   description,
   inLanguage: 'ru',
@@ -38,7 +41,7 @@ const serviceLd = {
   jsonLd={[serviceLd, faqLd(faq), breadcrumbLd(origin, [['Главная', '/ru/'], ['Сервис Tesla', '/ru/servis-tesla/']])]}>
   <div class="page-head"><div class="wrap">
     <nav class="crumbs" aria-label="Навигация"><a href="/ru/">Главная</a><span>/</span><span>Сервис Tesla</span></nav>
-    <h1>Ремонт и сервис Tesla в Киеве — Нивки и Виноградарь</h1>
+    <h1>Ремонт Tesla в Киеве — СТО для Теслы, Нивки и Виноградарь</h1>
     <p class="lead">Model S, 3, X и Y. Диагностика батареи, охлаждение, тепловой насос, зарядка, ходовая и тормоза с допуском к работе с высоким напряжением.</p>
   </div></div>
 

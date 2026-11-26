@@ -158,6 +158,16 @@ const speculation = {
   })();
 </script>
 <script is:inline>
+  /* натискання на номер: власний лічильник (адмінка → Дзвінки). Номер у вікні вибору рахується
+     як дзвінок на нього; кнопка, що лише відкриває вікно, — окремо, без номера. */
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="tel:"]');
+    if (!a || !navigator.sendBeacon) return;
+    const pick = document.getElementById('phone-pick');
+    const opensPicker = pick && typeof pick.showModal === 'function' && !pick.contains(a);
+    const phone = opensPicker ? '' : (a.getAttribute('href') || '').slice(4);
+    navigator.sendBeacon('/api/call', JSON.stringify({ phone, page: location.pathname }));
+  });
   /* цілі аналітики: дзвінок, пошта, месенджери. Без GA4 (gtag відсутній) нічого не відбувається. */
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('a[href]');

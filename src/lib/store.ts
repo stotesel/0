@@ -70,7 +70,8 @@ async function sb<T>(path: string, init: RequestInit & { prefer?: string } = {})
 }
 
 async function sbContent(): Promise<Record<string, any>> {
-  const rows = await sb<{ key: string; value: any }[]>('site_content?select=key,value');
+  // Статистику дзвінків публічні сторінки не потребують: не тягнемо її з кожним запитом
+  const rows = await sb<{ key: string; value: any }[]>('site_content?select=key,value&key=neq.calls');
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }
 
@@ -210,5 +211,32 @@ export async function updateBooking(id: string, status: Booking['status']) {
   const db = await demoRead();
   const row = db.bookings.find((x) => x.id === id);
   if (row) row.status = status;
+  await demoWrite(db);
+}
+
+/* ---------------- Натискання «Зателефонувати» ---------------- */
+/** По днях (дата в Києві): p — номер → натискання, s — сторінка → натискання, o — відкрили вікно вибору номера. */
+export type CallStats = Record<string, { p: Record<string, number>; s: Record<string, number>; o: number }>;
+const KEEP_DAYS = 400;
+
+export async function getCalls(): Promise<CallStats> {
+  if (mode() === 'supabase') {
+    const rows = await sb<{ value: CallStats }[]>('site_content?select=value&key=eq.calls');
+    return rows[0]?.value ?? {};
+  }
+  return ((await demoRead()).content as any).calls ?? {};
+}
+
+/** Додає одне натискання. Читання й запис окремі, тож два кліки в ту саму мить можуть злитися в один: для лічильника це прийнятно. */
+export async function addCall(day: string, phone: string, page: string) {
+  const stats = await getCalls();
+  const d = (stats[day] ??= { p: {}, s: {}, o: 0 });
+  if (phone) { d.p[phone] = (d.p[phone] ?? 0) + 1; d.s[page] = (d.s[page] ?? 0) + 1; }
+  else d.o += 1;
+  const days = Object.keys(stats).sort();
+  for (const old of days.slice(0, Math.max(0, days.length - KEEP_DAYS))) delete stats[old];
+  if (mode() === 'supabase') return void (await upsertContent('calls', stats));
+  const db = await demoRead();
+  (db.content as any).calls = stats;
   await demoWrite(db);
 }
